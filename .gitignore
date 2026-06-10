@@ -1,0 +1,21 @@
+node_modules/
+.next/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Runtime and generated artifacts
+.runtime/
+test-results/
+playwright-report/
+tsconfig.tsbuildinfo
+
+# Mobile generated files
+mobile_expo/android/app/debug.keystore
+
+# OS files
+.DS_Store
+Thumbs.db

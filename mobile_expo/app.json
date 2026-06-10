@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "AI Growth OS",
+    "slug": "ai-growth-os-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0B1320"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aigrowthos.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0B1320"
+      },
+      "package": "com.aigrowthos.mobile"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
