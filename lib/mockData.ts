@@ -128,11 +128,13 @@ export interface CoachAction {
 }
 
 export const MOCK_COACH_ACTIONS: CoachAction[] = [
-  { id: 1, time: '18:00–20:00', action: 'Opublikuj film na TikTok i YouTube Shorts', priority: 'high', done: false },
-  { id: 2, time: '09:00', action: 'Nagraj: "AI tools for creators — TOP 5 w 2025"', priority: 'high', done: false },
-  { id: 3, time: 'Teraz', action: 'Odpowiedz na pierwsze 10 komentarzy (Smart Inbox)', priority: 'medium', done: false },
-  { id: 4, time: '12:00', action: 'Opublikuj Instagram Reels z wczorajszego materiału', priority: 'medium', done: false },
-  { id: 5, time: 'Dziś wieczór', action: 'Zaplanuj treść na następny tydzień (3 tematy)', priority: 'low', done: false },
+  { id: 1, time: '18:00–20:00', action: '✨ PRIORYTET: Opublikuj film #1 na TikTok & YouTube Shorts (hook w 1s, min 720p, fast cuts)', priority: 'high', done: false },
+  { id: 2, time: '09:00', action: '🎬 Nagraj: "AI tools for creators — TOP 5 w 2025" (3-5 min, setup z neonowym tłem, B-roll)', priority: 'high', done: false },
+  { id: 3, time: 'Teraz', action: '💬 ENGAGEMENT PUSH: Odpowiedz na pierwsze 15 komentarzy w 30 min (boost +45% algorytm, fav every reply)', priority: 'high', done: false },
+  { id: 4, time: '12:00', action: '📱 Repurpose: Opublikuj Instagram Reels (add subs, 9:16, emoji text), TikTok (zmień hook), Shorts (add cards)', priority: 'medium', done: false },
+  { id: 5, time: '15:00', action: '📊 Analytics check: Sprawdź CTR, watch time, save rate na ostatnim filmie — przygotuj A/B dla kolejnego', priority: 'medium', done: false },
+  { id: 6, time: 'Wieczór', action: '📅 Content planning: 5 pomysłów na tydzień (trending + evergreen + collaboration ideas)', priority: 'medium', done: false },
+  { id: 7, time: 'Przed snem', action: '🔔 PIN Best comment z CTą: "Sprawdź pełny poradnik w naszym ostatnim video" (boost interactions)', priority: 'low', done: false },
 ];
 
 export const MOCK_RECENT_CONTENT = [

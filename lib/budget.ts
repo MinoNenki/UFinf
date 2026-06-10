@@ -8,12 +8,14 @@ export const TOP_UP_PACKS: Record<TopUpPackId, {
   priceUsd: number;
   generations: number;
   bonusLabel?: string;
+  description?: string;
 }> = {
   boost_25: {
     id: 'boost_25',
     label: 'Starter Boost',
     priceUsd: 9,
     generations: 25,
+    description: 'Idealne dla nowych twórców • $0.36 za generację • 25 filmów pełnoprawnych',
   },
   boost_75: {
     id: 'boost_75',
@@ -21,6 +23,7 @@ export const TOP_UP_PACKS: Record<TopUpPackId, {
     priceUsd: 19,
     generations: 75,
     bonusLabel: 'Najczesciej wybierany',
+    description: 'Bestseller • $0.25 za generację • 75 filmów w tydzień • Oszczędzasz $6 vs Starter',
   },
   boost_200: {
     id: 'boost_200',
@@ -28,6 +31,7 @@ export const TOP_UP_PACKS: Record<TopUpPackId, {
     priceUsd: 39,
     generations: 200,
     bonusLabel: 'Najlepsza cena / generacje',
+    description: 'Dla profesjonalistów • $0.195 za generację • 200 filmów/miesiąc • Oszczędzasz $29 vs Starter',
   },
 };
 
@@ -37,27 +41,31 @@ export const PLANS: Record<PlanKey, {
   dailyGenerations: number;
   maxRequestCostUsd: number;
   features: string[];
+  fullDescription?: string;
 }> = {
   free: {
     name: 'Free',
     priceMonthly: 0,
     dailyGenerations: Number(process.env.FREE_DAILY_GENERATIONS || 5),
     maxRequestCostUsd: 0.03,
-    features: ['Demo Content Factory', '5 generacji dziennie', 'podstawowy Growth Coach']
+    features: ['Demo Content Factory', '5 generacji dziennie', 'podstawowy Growth Coach'],
+    fullDescription: 'Darmowy start • Testuj wszystkie funkcje • Bez karty kredytowej • Wsparcie community'
   },
   pro: {
     name: 'Pro',
     priceMonthly: 24,
     dailyGenerations: Number(process.env.PRO_DAILY_GENERATIONS || 60),
     maxRequestCostUsd: 0.08,
-    features: ['Content Factory', 'Trend Radar', 'AI Konkurencja', 'Smart Inbox', 'dokupienia jednorazowe']
+    features: ['Content Factory', 'Trend Radar', 'AI Konkurencja', 'Smart Inbox', 'dokupienia jednorazowe'],
+    fullDescription: 'Dla rosnących twórców • 60 generacji dziennie • AI Trend Radar (daily insights) • Smart Inbox • oszczędź czas na publikacji'
   },
   premium_plus: {
     name: 'Premium Plus',
     priceMonthly: 69,
     dailyGenerations: Number(process.env.PREMIUM_PLUS_DAILY_GENERATIONS || 180),
     maxRequestCostUsd: Number(process.env.MAX_REQUEST_COST_USD || 0.12),
-    features: ['One Click Publish', 'AI Content Brain', 'Revenue AI', 'wieksze limity', 'najtansze dokupienia']
+    features: ['One Click Publish', 'AI Content Brain', 'Revenue AI', 'wieksze limity', 'najtansze dokupienia'],
+    fullDescription: 'Pro-level ecosystem • 180 generacji dziennie • One Click Publish (auto TikTok→YouTube→Instagram) • AI Content Brain (intelligentna analiza trendu) • Revenue AI (monetyzacja) • Priority support'
   }
 };
 
@@ -67,6 +75,7 @@ export function plansFromSettings(antiLoss: AntiLossSettings): Record<PlanKey, {
   dailyGenerations: number;
   maxRequestCostUsd: number;
   features: string[];
+  fullDescription?: string;
 }> {
   return {
     free: {
