@@ -7,7 +7,7 @@ import { getStripeClient } from '@/lib/server/stripe';
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 function asPlanKey(value: unknown): PlanKey | null {
-  if (value === 'free' || value === 'pro' || value === 'premium_plus') {
+  if (value === 'free' || value === 'pro' || value === 'premium_plus' || value === 'expert') {
     return value;
   }
   return null;

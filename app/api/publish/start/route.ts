@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'One Click Publish jest tymczasowo wylaczone.' }, { status: 403 });
   }
 
-  if (plan !== 'premium_plus') {
+  if (plan !== 'premium_plus' && plan !== 'expert') {
     return NextResponse.json({ error: 'One Click Publish jest dostepne od planu Premium Plus.' }, { status: 403 });
   }
 
@@ -49,8 +49,11 @@ export async function POST(req: Request) {
   }
 
   const pack = generateGrowthPack({ topic, niche, platform: platforms.join(','), language });
+  const hybridPlan = buildOneClickHybridPlan(plan, {
+    hasOpenAi: Boolean(settings.apiKeys.openaiApiKey),
+    hasAnthropic: Boolean(settings.apiKeys.anthropicApiKey),
+  });
   const hasRealAi = Boolean(settings.apiKeys.openaiApiKey || settings.apiKeys.anthropicApiKey);
-  const hybridPlan = buildOneClickHybridPlan(plan, hasRealAi);
 
   const existing = await getJobByIdempotencyKey(idempotencyKey);
   if (existing) {

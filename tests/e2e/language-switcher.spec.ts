@@ -25,10 +25,10 @@ test('landing and dashboard switch language across PL EN ES', async ({ page }) =
   await expect(page.getByText('Preferencja jezyka zapisana dla tego uzytkownika przegladarki.')).toBeVisible();
 
   await page.goto('/dashboard');
-  await expect(page.getByRole('button', { name: 'Moje konto' }).first()).toBeVisible();
+  await expect(page.locator('button:has-text("Moje konto"), a:has-text("Moje konto")').first()).toBeVisible();
   await page.getByText('Dashboard').first().waitFor();
 
   await page.getByRole('button', { name: /^EN$/ }).first().click();
-  await expect(page.getByRole('button', { name: 'My account' }).first()).toBeVisible();
+  await expect(page.locator('button:has-text("My account"), a:has-text("My account")').first()).toBeVisible();
   await expect(page.getByText('Dashboard').first()).toBeVisible();
 });

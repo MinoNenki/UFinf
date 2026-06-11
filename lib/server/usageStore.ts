@@ -44,6 +44,7 @@ function defaultUsage(): UsageState {
       free: 0,
       pro: 0,
       premium_plus: 0,
+      expert: 0,
     },
     topUpGenerationsRemaining: 0,
     topUpPurchases: [],
@@ -55,6 +56,7 @@ function defaultUsage(): UsageState {
 function planDailyLimit(plan: PlanKey, antiLoss: AntiLossSettings) {
   if (plan === 'free') return antiLoss.freeDailyGenerations;
   if (plan === 'pro') return antiLoss.proDailyGenerations;
+  if (plan === 'expert') return antiLoss.premiumPlusDailyGenerations * 2;
   return antiLoss.premiumPlusDailyGenerations;
 }
 

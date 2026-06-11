@@ -1,4 +1,4 @@
-export type PlanKey = 'free' | 'pro' | 'premium_plus';
+export type PlanKey = 'free' | 'pro' | 'premium_plus' | 'expert';
 
 export type AntiLossSettings = {
   maxRequestCostUsd: number;

@@ -2,28 +2,100 @@ import { StatusBar } from 'expo-status-bar';
 import { Linking, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useMemo, useState } from 'react';
 
-type PlanKey = 'free' | 'pro' | 'premium_plus';
+type PlanKey = 'free' | 'pro' | 'premium_plus' | 'expert';
 
 const planLabels: Record<PlanKey, string> = {
   free: 'Free',
   pro: 'Pro',
   premium_plus: 'Premium Plus',
+  expert: 'Expert',
 };
 
 const APP_STORE_URL = process.env.EXPO_PUBLIC_APP_STORE_URL || 'https://apps.apple.com';
 const GOOGLE_PLAY_URL = process.env.EXPO_PUBLIC_GOOGLE_PLAY_URL || 'https://play.google.com/store';
 const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL || 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || WEB_URL;
 
 export default function App() {
   const [topic, setTopic] = useState('Wrzucam film o AI dla tworcow i chce publikacje na wszystkie platformy.');
+  const [niche, setNiche] = useState('creator economy');
   const [plan, setPlan] = useState<PlanKey>('premium_plus');
   const [oneClickPublish, setOneClickPublish] = useState(true);
   const [contentBrain, setContentBrain] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const coachInsight = useMemo(() => {
     if (!contentBrain) return 'AI Content Brain jest wylaczony.';
     return 'Twoje filmy o AI osiagaja o 70% wiecej wyswietlen niz filmy o programowaniu. Publikuj 18:00-20:00.';
   }, [contentBrain]);
+
+  async function login() {
+    setErrorMessage('');
+    setStatusMessage('');
+    setLoadingAuth(true);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password, otp }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErrorMessage(data?.error || 'Login failed.');
+        return;
+      }
+      setIsAuthed(true);
+      setStatusMessage('Authenticated. You can now trigger publish from mobile.');
+    } catch {
+      setErrorMessage('Network error while logging in. Check EXPO_PUBLIC_API_URL and server status.');
+    } finally {
+      setLoadingAuth(false);
+    }
+  }
+
+  async function publishEverywhere() {
+    setErrorMessage('');
+    setStatusMessage('');
+    setPublishing(true);
+    try {
+      const res = await fetch(`${API_URL}/api/publish/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'idempotency-key': `mobile-${Date.now()}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          topic,
+          niche,
+          plan,
+          language: 'pl',
+          platforms: ['tiktok', 'youtube', 'instagram', 'facebook', 'x'],
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErrorMessage(data?.error || 'Publish failed.');
+        return;
+      }
+
+      const id = data?.job?.id || 'queued';
+      setStatusMessage(`Publish job started: ${id}`);
+    } catch {
+      setErrorMessage('Network error while starting publish.');
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -55,6 +127,42 @@ export default function App() {
         </Text>
 
         <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Mobile Auth</Text>
+          <Text style={styles.switchHint}>Use your admin credentials with 2FA to run protected workflows.</Text>
+          <Text style={[styles.label, { marginTop: 10 }]}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            style={styles.smallInput}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            placeholder="admin@usinf.com"
+            placeholderTextColor="#6B7280"
+          />
+          <Text style={[styles.label, { marginTop: 10 }]}>Password</Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            style={styles.smallInput}
+            secureTextEntry
+            placeholder="Password"
+            placeholderTextColor="#6B7280"
+          />
+          <Text style={[styles.label, { marginTop: 10 }]}>2FA code</Text>
+          <TextInput
+            value={otp}
+            onChangeText={setOtp}
+            style={styles.smallInput}
+            keyboardType="number-pad"
+            placeholder="123456"
+            placeholderTextColor="#6B7280"
+          />
+          <TouchableOpacity style={styles.primaryButton} onPress={login} disabled={loadingAuth}>
+            <Text style={styles.primaryButtonText}>{loadingAuth ? 'Authenticating...' : isAuthed ? 'Authenticated' : 'Authenticate'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.card}>
           <Text style={styles.label}>Temat filmu</Text>
           <TextInput
             value={topic}
@@ -62,6 +170,15 @@ export default function App() {
             multiline
             style={styles.input}
             placeholder="Wpisz temat lub wklej link"
+            placeholderTextColor="#6B7280"
+          />
+
+          <Text style={[styles.label, { marginTop: 10 }]}>Nisza</Text>
+          <TextInput
+            value={niche}
+            onChangeText={setNiche}
+            style={styles.smallInput}
+            placeholder="creator economy"
             placeholderTextColor="#6B7280"
           />
 
@@ -94,9 +211,13 @@ export default function App() {
             <Switch value={contentBrain} onValueChange={setContentBrain} />
           </View>
 
-          <TouchableOpacity style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Publish Everywhere</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={publishEverywhere} disabled={publishing || !isAuthed || !oneClickPublish}>
+            <Text style={styles.primaryButtonText}>{publishing ? 'Starting publish...' : 'Publish Everywhere'}</Text>
           </TouchableOpacity>
+
+          <Text style={styles.apiHint}>API: {API_URL}</Text>
+          {statusMessage ? <Text style={styles.statusOk}>{statusMessage}</Text> : null}
+          {errorMessage ? <Text style={styles.statusErr}>{errorMessage}</Text> : null}
         </View>
 
         <View style={styles.card}>
@@ -223,6 +344,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0F172A',
   },
+  smallInput: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 12,
+    padding: 10,
+    fontSize: 14,
+    color: '#0F172A',
+  },
   planRow: {
     marginTop: 8,
     flexDirection: 'row',
@@ -276,6 +406,23 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 15,
+  },
+  apiHint: {
+    marginTop: 10,
+    fontSize: 11,
+    color: '#64748B',
+  },
+  statusOk: {
+    marginTop: 8,
+    color: '#0F766E',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statusErr: {
+    marginTop: 8,
+    color: '#B91C1C',
+    fontSize: 12,
+    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 16,

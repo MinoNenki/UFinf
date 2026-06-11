@@ -8,7 +8,7 @@ function isTopUpPackId(value: unknown): value is TopUpPackId {
 }
 
 function isPlanKey(value: unknown): value is PlanKey {
-  return value === 'free' || value === 'pro' || value === 'premium_plus';
+  return value === 'free' || value === 'pro' || value === 'premium_plus' || value === 'expert';
 }
 
 function resolveSuccessUrl(origin: string, kind: 'subscription' | 'topup', suffix: string) {
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
             currency: 'usd',
             product_data: {
               name: `USInf ${pack.label}`,
-              description: `${pack.generations} generations one-time top-up`,
+              description: `${pack.generations} generations one-time top-up - cheaper than monthly Premium Plus over time`,
             },
             unit_amount: Math.round(pack.priceUsd * 100),
           },
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
           currency: 'usd',
           product_data: {
             name: `USInf ${plan.name}`,
-            description: `${plan.dailyGenerations} generations per day`,
+              description: `${plan.dailyGenerations} generations per day - Premium Plus is the best value for recurring usage`,
           },
           recurring: {
             interval: 'month',

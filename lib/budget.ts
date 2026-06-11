@@ -15,7 +15,7 @@ export const TOP_UP_PACKS: Record<TopUpPackId, {
     label: 'Starter Boost',
     priceUsd: 9,
     generations: 25,
-    description: 'Idealne dla nowych twórców • $0.36 za generację • 25 filmów pełnoprawnych',
+    description: 'Idealne dla nowych twórców • $0.36 za generację • 25 generacji na content i produkcję',
   },
   boost_75: {
     id: 'boost_75',
@@ -23,15 +23,15 @@ export const TOP_UP_PACKS: Record<TopUpPackId, {
     priceUsd: 19,
     generations: 75,
     bonusLabel: 'Najczesciej wybierany',
-    description: 'Bestseller • $0.25 za generację • 75 filmów w tydzień • Oszczędzasz $6 vs Starter',
+    description: 'Bestseller • $0.25 za generację • 75 generacji w tydzień • Oszczędzasz $6 vs Starter',
   },
   boost_200: {
     id: 'boost_200',
     label: 'Scale Boost',
     priceUsd: 39,
-    generations: 200,
+    generations: 150,
     bonusLabel: 'Najlepsza cena / generacje',
-    description: 'Dla profesjonalistów • $0.195 za generację • 200 filmów/miesiąc • Oszczędzasz $29 vs Starter',
+    description: 'Dla profesjonalistów • $0.26 za generację • 150 generacji/miesiąc • Oszczędzasz $15 vs Starter',
   },
 };
 
@@ -66,6 +66,14 @@ export const PLANS: Record<PlanKey, {
     maxRequestCostUsd: Number(process.env.MAX_REQUEST_COST_USD || 0.12),
     features: ['One Click Publish', 'AI Content Brain', 'Revenue AI', 'wieksze limity', 'najtansze dokupienia'],
     fullDescription: 'Pro-level ecosystem • 180 generacji dziennie • One Click Publish (auto TikTok→YouTube→Instagram) • AI Content Brain (intelligentna analiza trendu) • Revenue AI (monetyzacja) • Priority support'
+  },
+  expert: {
+    name: 'Expert',
+    priceMonthly: 119,
+    dailyGenerations: Number(process.env.EXPERT_DAILY_GENERATIONS || 360),
+    maxRequestCostUsd: Number(process.env.MAX_REQUEST_COST_USD || 0.12),
+    features: ['Everything in Premium Plus', 'priority queue', 'workspace growth support', 'highest limits'],
+    fullDescription: 'Best for teams and power creators • 360 generacji dziennie • priorytetowe przetwarzanie • pełny stack automatyzacji i publikacji'
   }
 };
 
@@ -91,6 +99,11 @@ export function plansFromSettings(antiLoss: AntiLossSettings): Record<PlanKey, {
     premium_plus: {
       ...PLANS.premium_plus,
       dailyGenerations: antiLoss.premiumPlusDailyGenerations,
+      maxRequestCostUsd: antiLoss.maxRequestCostUsd,
+    },
+    expert: {
+      ...PLANS.expert,
+      dailyGenerations: antiLoss.premiumPlusDailyGenerations * 2,
       maxRequestCostUsd: antiLoss.maxRequestCostUsd,
     },
   };

@@ -35,8 +35,11 @@ export async function POST(req: Request) {
     language: String(body.language || 'pl') as 'pl' | 'en' | 'es',
   });
 
+  const hybridPlan = buildOneClickHybridPlan(plan, {
+    hasOpenAi: Boolean(settings.apiKeys.openaiApiKey),
+    hasAnthropic: Boolean(settings.apiKeys.anthropicApiKey),
+  });
   const hasRealAiKey = Boolean(settings.apiKeys.openaiApiKey || settings.apiKeys.anthropicApiKey);
-  const hybridPlan = buildOneClickHybridPlan(plan, hasRealAiKey);
 
   if (Array.isArray(body.metrics) && body.metrics.length > 0) {
     await ingestBrainEvents(body.metrics);
