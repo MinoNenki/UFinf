@@ -23,11 +23,8 @@ export function validateEnvOnStartup() {
 
   if (!existsSync(envLocal)) {
     const warning = '[env] Brak .env.local. Dla bezpieczenstwa trzymaj klucze i limity w .env.local.';
-    if (isProd) {
-      throw new Error(`${warning} W produkcji plik .env.local jest wymagany.`);
-    }
     // eslint-disable-next-line no-console
-    console.warn(warning);
+    console.warn(isProd ? `${warning} W produkcji na Vercel uzyj zmiennych srodowiskowych projektu.` : warning);
   }
 
   if (!existsSync(envExample)) {
@@ -47,7 +44,8 @@ export function validateEnvOnStartup() {
   }
 
   if (isProd && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
-    throw new Error('ENV_INVALID: W produkcji ustaw OPENAI_API_KEY lub ANTHROPIC_API_KEY.');
+    // eslint-disable-next-line no-console
+    console.warn('[env] Brak OPENAI_API_KEY i ANTHROPIC_API_KEY - aplikacja uruchomi sie w trybie demo/safe mode.');
   }
 
   const adminSecret = process.env.ADMIN_SESSION_SECRET || '';
