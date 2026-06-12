@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Languages, DollarSign } from 'lucide-react';
+import { Languages, DollarSign, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { byLanguage, useI18n } from '@/lib/i18n';
+import { useAuth } from '@/lib/authContext';
 import LanguageSwitcher from './LanguageSwitcher';
 
 type TopUpPack = {
@@ -29,6 +31,8 @@ const COPY = {
     topupTitle: 'Dokup generacji',
     topupText: 'Wyczerpałeś limit? Dokup teraz bez abonamentu.',
     remaining: 'Pozostało generacji: ',
+    userTitle: 'Profil zalogowanego',
+    logoutBtn: 'Wyloguj się',
   },
   en: {
     title: 'My account',
@@ -45,6 +49,8 @@ const COPY = {
     topupTitle: 'Buy more generations',
     topupText: 'Hit your limit? Buy now, no subscription needed.',
     remaining: 'Generations remaining: ',
+    userTitle: 'Logged-in profile',
+    logoutBtn: 'Log out',
   },
   es: {
     title: 'Mi cuenta',
@@ -61,11 +67,15 @@ const COPY = {
     topupTitle: 'Compra más generaciones',
     topupText: '¿Alcanzaste tu límite? Compra ahora, sin suscripción.',
     remaining: 'Generaciones restantes: ',
+    userTitle: 'Perfil de usuario conectado',
+    logoutBtn: 'Cerrar sesión',
   },
 };
 
 export default function AccountPanel() {
   const { language, lastSavedAt } = useI18n();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
   const t = byLanguage(language, COPY);
   const [signupName, setSignupName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
@@ -110,7 +120,7 @@ export default function AccountPanel() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [language]);
 
   function quickRegister() {
     const name = signupName.trim();
@@ -157,6 +167,27 @@ export default function AccountPanel() {
         <h1>{t.title}</h1>
         <p>{t.subtitle}</p>
       </div>
+
+      {user && (
+        <div className="card" style={{ marginBottom: 16, background: 'linear-gradient(135deg,rgba(34,211,238,.1),rgba(34,211,238,.05))', borderColor: 'rgba(34,211,238,.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{t.userTitle}</h3>
+              <p style={{ fontSize: 14, color: '#e5edf9', marginBottom: 2 }}>👤 {user.displayName}</p>
+              <p style={{ fontSize: 12, color: 'var(--muted)' }}>📧 {user.email}</p>
+            </div>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={async () => {
+                await signOut();
+                router.push('/');
+              }}
+            >
+              <LogOut size={13} /> {t.logoutBtn}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid-2" style={{ gap: 16 }}>
         {paymentMessage ? <div className="alert alert-info" style={{ gridColumn: '1 / -1' }}>{paymentMessage}</div> : null}

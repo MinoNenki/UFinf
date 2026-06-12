@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import LandingPageLocalized from '@/components/LandingPageLocalized';
+import { DashboardGuard } from '@/components/DashboardGuard';
 
 export default function Home() {
   const [currentPath, setCurrentPath] = useState('/');
@@ -34,7 +35,7 @@ export default function Home() {
   }, []);
 
   if (!mounted) return <div style={{ minHeight: '100vh', background: '#050816' }} />;
-  if (currentPath.startsWith('/dashboard')) return <DashboardLayout />;
+  if (currentPath.startsWith('/dashboard')) return <DashboardGuard><DashboardLayout /></DashboardGuard>;
   return <LandingPageLocalized variant={abVariant} />;
 }
 

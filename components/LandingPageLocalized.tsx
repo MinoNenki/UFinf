@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Brain, CalendarClock, CheckCircle2, Clapperboard, DollarSign, Gauge, Globe2, Inbox, LockKeyhole, Radar, Rocket, ShieldCheck, Sparkles, UploadCloud, Zap, TrendingUp, Users, BarChart3, LogIn, LogOut, UserCircle2 } from 'lucide-react';
+import { ArrowRight, Brain, CalendarClock, CheckCircle2, Clapperboard, DollarSign, Gauge, Globe2, Inbox, LockKeyhole, Radar, Rocket, ShieldCheck, Sparkles, UploadCloud, Zap, TrendingUp, Users, BarChart3, LogIn, LogOut, UserCircle2, UserPlus } from 'lucide-react';
 import { TOP_UP_PACKS } from '@/lib/budget';
 import { byLanguage, useI18n } from '@/lib/i18n';
+import { useAuth } from '@/lib/authContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import MobileDownloadStrip from './MobileDownloadStrip';
 
@@ -19,6 +20,7 @@ type Result = any;
 
 export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }) {
   const { language } = useI18n();
+  const { user, signOut } = useAuth();
   const copy = byLanguage(language, {
     pl: {
       nav: { factory: 'Factory', trends: 'Trends', dashboard: 'Dashboard', pricing: 'Ceny', login: 'Logowanie', logout: 'Wylogowanie', account: 'Moje konto', register: 'Zarejestruj sie', enter: 'Wejdz do dashboardu ->' },
@@ -166,9 +168,18 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
         <div className="navlinks"><a href="#factory">{copy.nav.factory}</a><a href="#trends">{copy.nav.trends}</a><a href="/dashboard" className="navlink-hot">{copy.nav.dashboard}</a><a href="#pricing" className="navlink-hot">{copy.nav.pricing}</a></div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <LanguageSwitcher compact />
-          <a href="/dashboard/account" className="btn btn-ghost btn-sm"><UserCircle2 size={13} /> {copy.nav.account}</a>
-          {isAdmin && <button className="btn btn-ghost btn-sm" onClick={logout}><LogOut size={13} /> {copy.nav.logout}</button>}
-          <a href="/dashboard" className="btn btn-primary btn-sm btn-pulse-attention">{copy.nav.enter}</a>
+          {!user ? (
+            <>
+              <a href="/login" className="btn btn-ghost btn-sm"><LogIn size={13} /> {copy.nav.login}</a>
+              <a href="/register" className="btn btn-primary btn-sm"><UserPlus size={13} /> {copy.nav.register}</a>
+            </>
+          ) : (
+            <>
+              <a href="/dashboard" className="btn btn-ghost btn-sm"><UserCircle2 size={13} /> {copy.nav.account}</a>
+              <button className="btn btn-ghost btn-sm" onClick={() => { signOut(); window.location.href = '/'; }}><LogOut size={13} /> {copy.nav.logout}</button>
+            </>
+          )}
+          {!user && <a href="/dashboard" className="btn btn-primary btn-sm btn-pulse-attention">{copy.nav.enter}</a>}
         </div>
       </nav>
 
