@@ -22,6 +22,7 @@ import ContentBrainV2 from './ContentBrainV2';
 import AdminLogin from './AdminLogin';
 import LanguageSwitcher from './LanguageSwitcher';
 import AccountPanel from './AccountPanel';
+import DashboardGuard from './DashboardGuard';
 
 const NAV_ITEMS = [
   { path: '/dashboard', key: 'dashboard', icon: LayoutDashboard, section: 'main' },
@@ -191,7 +192,7 @@ export default function DashboardLayout() {
       <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sidebar-logo">
           <span className="logo-icon"><Sparkles size={15} color="#030d1a" /></span>
-          <span>USInf.com</span>
+          <span>UFInf</span>
         </div>
 
         <nav className="sidebar-nav">
@@ -298,7 +299,17 @@ export default function DashboardLayout() {
         </header>
 
         <main className="dash-content animate-in">
-          {adminLoaded ? renderPage(path, isAdmin, adminRole, refreshAdminSession, logoutAdmin) : <div className="card">{copy.loadingSession}</div>}
+          {adminLoaded ? (
+            path === '/dashboard/account' ? (
+              renderPage(path, isAdmin, adminRole, refreshAdminSession, logoutAdmin)
+            ) : (
+              <DashboardGuard onAuthSuccess={refreshAdminSession}>
+                {renderPage(path, isAdmin, adminRole, refreshAdminSession, logoutAdmin)}
+              </DashboardGuard>
+            )
+          ) : (
+            <div className="card">{copy.loadingSession}</div>
+          )}
           {lockedAdminPath && (
             <div className="alert alert-warning" style={{ marginTop: 12 }}>
               {copy.protectedView}

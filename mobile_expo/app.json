@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "AI Growth OS",
-    "slug": "ai-growth-os-mobile",
-    "scheme": "aigrowthos",
+    "name": "UFInf - Ultra Future Influencer",
+    "slug": "ufinfluencer-mobile",
+    "scheme": "ufinfluencer",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -23,13 +23,13 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aigrowthos.mobile"
+      "bundleIdentifier": "com.ufinfluencer.mobile"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0B1320"
       },
-      "package": "com.aigrowthos.mobile",
+      "package": "com.ufinfluencer.mobile",
       "permissions": [
         "INTERNET",
         "VIBRATE"
