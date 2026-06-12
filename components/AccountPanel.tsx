@@ -41,6 +41,8 @@ const COPY = {
     languageSaved: 'Preferencja jezyka zapisana dla tego uzytkownika przegladarki.',
     languageSavedAt: 'Ostatni zapis',
     adminTitle: 'Jak zalogowac sie do panelu admina',
+    oauthTitle: 'Google OAuth (mobile app)',
+    oauthText: 'Logowanie przez Google jest teraz aktywne w aplikacji mobilnej Expo (przycisk "Continue with Google"). W panelu web zostaje szybka rejestracja MVP.',
     adminSteps: [
       '1. Otworz panel Moje konto albo widok Admin Panel.',
       '2. Podaj email z ADMIN_EMAIL oraz haslo z ADMIN_PASSWORD.',
@@ -69,6 +71,8 @@ const COPY = {
     languageSaved: 'Language preference is saved for this browser user profile.',
     languageSavedAt: 'Last saved',
     adminTitle: 'How to sign in to the admin panel',
+    oauthTitle: 'Google OAuth (mobile app)',
+    oauthText: 'Google sign-in is currently enabled in the Expo mobile app ("Continue with Google" button). The web panel keeps the lightweight MVP registration flow.',
     adminSteps: [
       '1. Open My Account or the Admin Panel view.',
       '2. Enter the email from ADMIN_EMAIL and the password from ADMIN_PASSWORD.',
@@ -97,6 +101,8 @@ const COPY = {
     languageSaved: 'La preferencia de idioma se guarda para este perfil de navegador.',
     languageSavedAt: 'Ultimo guardado',
     adminTitle: 'Como iniciar sesion en el panel admin',
+    oauthTitle: 'Google OAuth (app movil)',
+    oauthText: 'El inicio de sesion con Google esta activo en la app movil Expo (boton "Continue with Google"). En web se mantiene el flujo ligero de registro MVP.',
     adminSteps: [
       '1. Abre Mi cuenta o la vista Admin Panel.',
       '2. Introduce el correo de ADMIN_EMAIL y la contrasena de ADMIN_PASSWORD.',
@@ -233,6 +239,11 @@ export default function AccountPanel({ isAdmin, role, onLogin, onLogout }: Props
               {language === 'pl' ? 'Zarejestruj sie' : language === 'es' ? 'Registrarme' : 'Register'}
             </button>
             {signupMessage ? <div className="alert alert-info">{signupMessage}</div> : null}
+          </div>
+
+          <div className="alert alert-warning" style={{ marginTop: 12 }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>{t.oauthTitle}</div>
+            <div>{t.oauthText}</div>
           </div>
         </div>
 
