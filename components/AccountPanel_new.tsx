@@ -25,7 +25,7 @@ const COPY = {
     registered: 'Konto założone — możesz już publikować!',
     languageTitle: 'Wybór języka',
     languageText: 'Zmiana działa globalnie dla całego panelu.',
-    languageSaved: 'Język zapisany',
+    languageSaved: 'Preferencja jezyka zapisana dla tego uzytkownika przegladarki.',
     topupTitle: 'Dokup generacji',
     topupText: 'Wyczerpałeś limit? Dokup teraz bez abonamentu.',
     remaining: 'Pozostało generacji: ',
