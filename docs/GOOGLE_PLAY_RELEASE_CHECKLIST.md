@@ -14,6 +14,8 @@
 - Set production mobile env values in EAS:
   - `EXPO_PUBLIC_API_URL=https://api.usinf.com`
   - `EXPO_PUBLIC_WEB_URL=https://usinf.com`
+  - `EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co`
+  - `EXPO_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY`
   - `EXPO_PUBLIC_GOOGLE_PLAY_URL=https://play.google.com/store/apps/details?id=com.aigrowthos.mobile`
 - Validate mobile auth flow against production backend.
 - Validate protected publish endpoint from mobile app.
@@ -28,6 +30,20 @@
   - `VIBRATE`
 - Remove unnecessary storage and overlay permissions.
 - Verify no secrets are embedded in client bundle.
+
+## 3.1 Supabase Google Auth Setup
+- Supabase Dashboard:
+  - Authentication -> Providers -> Google -> Enable
+  - Add Google Client ID + Client Secret
+  - Add Redirect URL: `aigrowthos://auth/callback`
+- Google Cloud Console:
+  - Configure OAuth consent screen
+  - Create OAuth Web Client
+  - Add Supabase callback URL as authorized redirect URI
+- Test on device:
+  - Open app -> Continue with Google
+  - Confirm user email is shown after login
+  - Close and reopen app -> session still active
 
 ## 4. Store Listing Assets
 - App name and short description.
@@ -46,6 +62,8 @@
 - Target API level and Play integrity requirements satisfied.
 
 ## 6. Release Process
+- Play Console click path:
+  - Testing -> Internal testing -> Create new release -> Upload AAB -> Review release -> Start rollout
 - Upload AAB to Internal testing first.
 - Add test users and verify onboarding/auth/publish flow.
 - Check crash-free startup and network error handling.

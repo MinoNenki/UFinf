@@ -1,6 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
 import { Linking, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { supabase, supabaseConfigured } from './lib/supabase';
+
+WebBrowser.maybeCompleteAuthSession();
 
 type PlanKey = 'free' | 'pro' | 'premium_plus' | 'expert';
 
@@ -15,6 +21,7 @@ const APP_STORE_URL = process.env.EXPO_PUBLIC_APP_STORE_URL || 'https://apps.app
 const GOOGLE_PLAY_URL = process.env.EXPO_PUBLIC_GOOGLE_PLAY_URL || 'https://play.google.com/store';
 const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL || 'http://localhost:3000';
 const API_URL = process.env.EXPO_PUBLIC_API_URL || WEB_URL;
+const SUPABASE_REDIRECT_URI = makeRedirectUri({ scheme: 'aigrowthos', path: 'auth/callback' });
 
 export default function App() {
   const [topic, setTopic] = useState('Wrzucam film o AI dla tworcow i chce publikacje na wszystkie platformy.');
@@ -22,24 +29,95 @@ export default function App() {
   const [plan, setPlan] = useState<PlanKey>('premium_plus');
   const [oneClickPublish, setOneClickPublish] = useState(true);
   const [contentBrain, setContentBrain] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [isAuthed, setIsAuthed] = useState(false);
-  const [loadingAuth, setLoadingAuth] = useState(false);
+  const [isOpsAuthed, setIsOpsAuthed] = useState(false);
+  const [loadingOpsAuth, setLoadingOpsAuth] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    if (!supabaseConfigured) return;
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session ?? null);
+    });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession);
+    });
+
+    return () => {
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
 
   const coachInsight = useMemo(() => {
     if (!contentBrain) return 'AI Content Brain jest wylaczony.';
     return 'Twoje filmy o AI osiagaja o 70% wiecej wyswietlen niz filmy o programowaniu. Publikuj 18:00-20:00.';
   }, [contentBrain]);
 
-  async function login() {
+  async function signInWithGoogle() {
+    if (!supabaseConfigured) {
+      setErrorMessage('Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY.');
+      return;
+    }
+
+    setGoogleLoading(true);
     setErrorMessage('');
     setStatusMessage('');
-    setLoadingAuth(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: SUPABASE_REDIRECT_URI,
+          skipBrowserRedirect: true,
+          queryParams: {
+            prompt: 'consent',
+            access_type: 'offline',
+          },
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.url) throw new Error('Google OAuth URL was not generated.');
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, SUPABASE_REDIRECT_URI);
+      if (result.type !== 'success' || !result.url) {
+        throw new Error('Google sign-in was canceled or interrupted.');
+      }
+
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(result.url);
+      if (exchangeError) throw exchangeError;
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userEmail = sessionData.session?.user?.email || 'unknown';
+      setSession(sessionData.session ?? null);
+      setStatusMessage(`Signed in with Google as ${userEmail}.`);
+    } catch (e) {
+      setErrorMessage(e instanceof Error ? e.message : 'Google login failed.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
+  async function signOutGoogle() {
+    setErrorMessage('');
+    setStatusMessage('');
+    await supabase.auth.signOut();
+    setSession(null);
+    setStatusMessage('Google session ended.');
+  }
+
+  async function loginOperator() {
+    setErrorMessage('');
+    setStatusMessage('');
+    setLoadingOpsAuth(true);
     try {
       const res = await fetch(`${API_URL}/api/admin/login`, {
         method: 'POST',
@@ -52,12 +130,12 @@ export default function App() {
         setErrorMessage(data?.error || 'Login failed.');
         return;
       }
-      setIsAuthed(true);
-      setStatusMessage('Authenticated. You can now trigger publish from mobile.');
+      setIsOpsAuthed(true);
+      setStatusMessage('Operator authenticated. You can now trigger publish from mobile.');
     } catch {
       setErrorMessage('Network error while logging in. Check EXPO_PUBLIC_API_URL and server status.');
     } finally {
-      setLoadingAuth(false);
+      setLoadingOpsAuth(false);
     }
   }
 
@@ -127,8 +205,21 @@ export default function App() {
         </Text>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Mobile Auth</Text>
-          <Text style={styles.switchHint}>Use your admin credentials with 2FA to run protected workflows.</Text>
+          <Text style={styles.sectionTitle}>Account (Google + Supabase)</Text>
+          <Text style={styles.switchHint}>Registration and login are handled by Google OAuth via Supabase Auth.</Text>
+          <Text style={styles.accountState}>
+            {session?.user?.email ? `Signed in as: ${session.user.email}` : 'No active Google session'}
+          </Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={session ? signOutGoogle : signInWithGoogle} disabled={googleLoading}>
+            <Text style={styles.primaryButtonText}>
+              {googleLoading ? 'Connecting...' : session ? 'Sign out Google account' : 'Continue with Google'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Operator Auth (admin + 2FA)</Text>
+          <Text style={styles.switchHint}>Needed only for protected publish workflows and admin-grade operations.</Text>
           <Text style={[styles.label, { marginTop: 10 }]}>Email</Text>
           <TextInput
             value={email}
@@ -157,8 +248,8 @@ export default function App() {
             placeholder="123456"
             placeholderTextColor="#6B7280"
           />
-          <TouchableOpacity style={styles.primaryButton} onPress={login} disabled={loadingAuth}>
-            <Text style={styles.primaryButtonText}>{loadingAuth ? 'Authenticating...' : isAuthed ? 'Authenticated' : 'Authenticate'}</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={loginOperator} disabled={loadingOpsAuth}>
+            <Text style={styles.primaryButtonText}>{loadingOpsAuth ? 'Authenticating...' : isOpsAuthed ? 'Authenticated' : 'Authenticate'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -211,7 +302,7 @@ export default function App() {
             <Switch value={contentBrain} onValueChange={setContentBrain} />
           </View>
 
-          <TouchableOpacity style={styles.primaryButton} onPress={publishEverywhere} disabled={publishing || !isAuthed || !oneClickPublish}>
+          <TouchableOpacity style={styles.primaryButton} onPress={publishEverywhere} disabled={publishing || !isOpsAuthed || !oneClickPublish}>
             <Text style={styles.primaryButtonText}>{publishing ? 'Starting publish...' : 'Publish Everywhere'}</Text>
           </TouchableOpacity>
 
@@ -428,6 +519,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#0F172A',
+  },
+  accountState: {
+    marginTop: 8,
+    marginBottom: 4,
+    fontSize: 12,
+    color: '#0F766E',
+    fontWeight: '600',
   },
   coachText: {
     marginTop: 8,

@@ -2,6 +2,7 @@
   "expo": {
     "name": "AI Growth OS",
     "slug": "ai-growth-os-mobile",
+    "scheme": "aigrowthos",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
