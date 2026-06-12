@@ -13,7 +13,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetch('/api/admin/session').then(r => r.json()).then(d => {
-      if (d?.authenticated) setLoggedIn(true);
+      if (d?.isAdmin) setLoggedIn(true);
     }).catch(() => {});
   }, []);
 
