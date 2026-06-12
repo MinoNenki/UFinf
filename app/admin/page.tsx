@@ -70,7 +70,7 @@ export default function AdminPage() {
             <Shield size={26} color="#030d1a" strokeWidth={2.5} />
           </div>
           <h1 style={{ color: '#e5edf9', fontSize: 22, fontWeight: 800, margin: 0 }}>Panel admina</h1>
-          <p style={{ color: '#6b8099', fontSize: 13, marginTop: 6 }}>USInf.com — dostęp dla administratora</p>
+          <p style={{ color: '#6b8099', fontSize: 13, marginTop: 6 }}>UFInf — dostęp dla administratora</p>
         </div>
 
         {/* Card */}

@@ -21,7 +21,7 @@ import OneClickPublish from './OneClickPublish';
 import ContentBrainV2 from './ContentBrainV2';
 import AdminLogin from './AdminLogin';
 import LanguageSwitcher from './LanguageSwitcher';
-import AccountPanel from './AccountPanel';
+import AccountPanel from './AccountPanel_new';
 import DashboardGuard from './DashboardGuard';
 
 const NAV_ITEMS = [
@@ -114,7 +114,7 @@ function renderPage(path: string, isAdmin: boolean, adminRole: string | undefine
   if (path === '/dashboard/studio') return <Studio />;
   if (path === '/dashboard/brain') return <ContentBrainV2 />;
   if (path === '/dashboard/revenue') return <Revenue />;
-  if (path === '/dashboard/account') return <AccountPanel isAdmin={isAdmin} role={adminRole} onLogin={() => navigate('/dashboard/admin')} onLogout={onAdminLogout} />;
+  if (path === '/dashboard/account') return <AccountPanel />;
   if (path === '/dashboard/admin') return isAdmin ? <AdminPanel adminRole={adminRole} /> : <AdminLogin onSuccess={onAdminAuthSuccess} />;
   if (path === '/dashboard/settings') return isAdmin ? <SettingsPage /> : <AdminLogin onSuccess={onAdminAuthSuccess} />;
   return <DashboardHome />;
