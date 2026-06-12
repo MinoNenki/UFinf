@@ -11,34 +11,34 @@ export default function DashboardHomeLocalized() {
   const { language } = useI18n();
   const copy = byLanguage(language, {
     pl: {
-      score: 'Growth Score', top: 'Top 15% tworcow', week: '+3 punkty w tym tygodniu',
+      score: 'Growth Score', top: 'Top 15% tworcow premium', week: '+3 punkty w tym tygodniu',
       labels: ['Wyswietlenia', 'Subskrybenci', 'Zaangazowanie', 'Przychod'],
       hot: 'Goracy trend!', suffix: 'idealne dla Twojej niszy!', cta: 'Wygeneruj teraz ->',
       today: 'Plan na dzis', full: 'Pelny plan -> Growth Coach', status: 'STATUS PLATFORM', disconnected: 'Niepolaczony',
-      recent: 'OSTATNIE TRESCI', best: 'Najlepszy czas na publikacje dzisiaj', bestText: 'Twoja nisza osiaga szczytowe zaangazowanie miedzy 18:00-20:00',
-      publish: 'One Click Publish', premium: 'Premium Plus', publishText: 'Wrzucasz film i klikasz "Publish Everywhere". System przygotowuje opisy, hashtagi, miniature i gotowe pakiety publikacji.',
+      recent: 'OSTATNIE TRESCI', best: 'Najlepszy czas na publikacje dzisiaj', bestText: 'Twoja nisza osiaga szczytowe zaangazowanie miedzy 18:00-20:00 - to okno z najwyzszym potencjalem konwersji.',
+      publish: 'One Click Publish', premium: 'Premium Plus', publishText: 'Wrzucasz material i klikasz "Publish Everywhere". System przygotowuje opisy, hashtagi, miniature, CTA i gotowe pakiety publikacji pod kazda platforme.',
       brain: 'AI Content Brain', insight: 'Insight', brainText: 'Twoje filmy o AI osiagaja o 70% wiecej wyswietlen niz filmy o programowaniu. Publikuj miedzy ',
       actions: ['Opublikuj film na TikTok i YouTube Shorts', 'Nagraj: "AI tools for creators - TOP 5 w 2025"', 'Odpowiedz na pierwsze 10 komentarzy (Smart Inbox)'],
       dates: ['2 godz. temu', 'Wczoraj', '3 dni temu'],
     },
     en: {
-      score: 'Growth Score', top: 'Top 15% of creators', week: '+3 points this week',
+      score: 'Growth Score', top: 'Top 15% premium creators', week: '+3 points this week',
       labels: ['Views', 'Subscribers', 'Engagement', 'Revenue'],
       hot: 'Hot trend!', suffix: 'perfect for your niche!', cta: 'Generate now ->',
       today: 'Plan for today', full: 'Full plan -> Growth Coach', status: 'PLATFORM STATUS', disconnected: 'Not connected',
-      recent: 'RECENT CONTENT', best: 'Best time to publish today', bestText: 'Your niche reaches peak engagement between 6:00 PM and 8:00 PM',
-      publish: 'One Click Publish', premium: 'Premium Plus', publishText: 'You upload a video and click "Publish Everywhere". The system prepares descriptions, hashtags, a thumbnail, and ready-to-publish packages.',
+      recent: 'RECENT CONTENT', best: 'Best time to publish today', bestText: 'Your niche reaches peak engagement between 6:00 PM and 8:00 PM - your highest conversion window.',
+      publish: 'One Click Publish', premium: 'Premium Plus', publishText: 'Upload once and click "Publish Everywhere". The system builds platform-ready descriptions, hashtags, thumbnails, CTA blocks, and execution-ready publish packages.',
       brain: 'AI Content Brain', insight: 'Insight', brainText: 'Your AI videos get 70% more views than programming videos. Publish between ',
       actions: ['Publish the video to TikTok and YouTube Shorts', 'Record: "AI tools for creators - TOP 5 in 2025"', 'Reply to the first 10 comments (Smart Inbox)'],
       dates: ['2 hours ago', 'Yesterday', '3 days ago'],
     },
     es: {
-      score: 'Growth Score', top: 'Top 15% de creadores', week: '+3 puntos esta semana',
+      score: 'Growth Score', top: 'Top 15% de creadores premium', week: '+3 puntos esta semana',
       labels: ['Vistas', 'Suscriptores', 'Engagement', 'Ingresos'],
       hot: 'Tendencia caliente!', suffix: 'perfecta para tu nicho!', cta: 'Generar ahora ->',
       today: 'Plan para hoy', full: 'Plan completo -> Growth Coach', status: 'ESTADO DE PLATAFORMAS', disconnected: 'No conectado',
-      recent: 'CONTENIDO RECIENTE', best: 'Mejor momento para publicar hoy', bestText: 'Tu nicho alcanza el pico de engagement entre las 18:00 y las 20:00',
-      publish: 'Publicacion en un clic', premium: 'Premium Plus', publishText: 'Subes un video y haces clic en "Publish Everywhere". El sistema prepara descripciones, hashtags, miniatura y paquetes listos para publicar.',
+      recent: 'CONTENIDO RECIENTE', best: 'Mejor momento para publicar hoy', bestText: 'Tu nicho alcanza el pico de engagement entre las 18:00 y las 20:00 - la ventana de mayor conversion.',
+      publish: 'Publicacion en un clic', premium: 'Premium Plus', publishText: 'Subes una vez y haces clic en "Publish Everywhere". El sistema crea descripciones, hashtags, miniaturas, CTA y paquetes listos para publicar en cada plataforma.',
       brain: 'AI Content Brain', insight: 'Insight', brainText: 'Tus videos de AI consiguen un 70% mas de vistas que los videos de programacion. Publica entre ',
       actions: ['Publica el video en TikTok y YouTube Shorts', 'Graba: "AI tools for creators - TOP 5 en 2025"', 'Responde a los primeros 10 comentarios (Smart Inbox)'],
       dates: ['hace 2 horas', 'Ayer', 'hace 3 dias'],
@@ -168,7 +168,7 @@ export default function DashboardHomeLocalized() {
             <span className="badge badge-violet">{copy.premium}</span>
           </div>
           <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10 }}>{copy.publishText}</p>
-          <button className="btn btn-gradient btn-sm" onClick={() => navigate('/dashboard/factory')}>Publish Everywhere</button>
+          <button className="btn btn-gradient btn-sm btn-pulse-attention" onClick={() => navigate('/dashboard/factory')}>Publish Everywhere</button>
         </div>
 
         <div className="card" style={{ background: 'rgba(52,211,153,.08)', borderColor: 'rgba(52,211,153,.22)' }}>

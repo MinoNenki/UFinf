@@ -289,18 +289,18 @@ export default function AccountPanel({ isAdmin, role, onLogin, onLogout }: Props
           <div className="flex items-center gap-8" style={{ marginBottom: 12 }}>
             <ShieldCheck size={16} color="var(--cyan)" />
             <h3 style={{ fontSize: 15, fontWeight: 700 }}>
-              {language === 'pl' ? 'Jednorazowe dokupienie generacji' : language === 'es' ? 'Compra unica de generaciones' : 'One-time generation top-up'}
+              {language === 'pl' ? 'Jednorazowe dokupienie kredytow contentu' : language === 'es' ? 'Compra unica de creditos de contenido' : 'One-time content credit top-up'}
             </h3>
           </div>
           <p style={{ color: 'var(--muted)', marginBottom: 12 }}>
             {language === 'pl'
-              ? 'Gdy wyczerpiesz dzienny limit planu, system automatycznie zuzyje najpierw dokupione pakiety.'
+              ? 'Gdy wyczerpiesz dzienny limit planu, system automatycznie zuzyje najpierw dokupione kredyty contentu.'
               : language === 'es'
-                ? 'Cuando se agota el limite diario del plan, el sistema usa primero los paquetes comprados.'
-                : 'When your daily plan limit is exhausted, the system automatically consumes purchased top-ups first.'}
+                ? 'Cuando se agota el limite diario del plan, el sistema usa primero los creditos de contenido comprados.'
+                : 'When your daily plan limit is exhausted, the system automatically consumes purchased content credits first.'}
           </p>
           <div className="alert alert-info" style={{ marginBottom: 12 }}>
-            {language === 'pl' ? 'Pozostale dokupione generacje' : language === 'es' ? 'Generaciones extra restantes' : 'Remaining top-up generations'}: <strong>{remaining}</strong>
+            {language === 'pl' ? 'Pozostale kredyty contentu' : language === 'es' ? 'Creditos de contenido restantes' : 'Remaining content credits'}: <strong>{remaining}</strong>
           </div>
           <div className="grid-3" style={{ gap: 12 }}>
             {packs.map((pack) => (

@@ -14,9 +14,9 @@ function Sparkline({ values }: { values: number[] }) {
 export default function TrendRadarLocalized() {
   const { language } = useI18n();
   const copy = byLanguage(language, {
-    pl: { title: 'Trend Radar', subtitle: 'Rosnace tematy i sygnaly trendow dla Twojej niszy', filters: ['Dzisiaj', 'Ten tydzien', 'Ten miesiac'], all: 'Wszystkie', hot: 'Goracy', growing: 'Rosnacy', growth: 'wzrost', views: 'wyswietlen', generate: 'Wygeneruj tresc ->', action: 'Wygeneruj', table: ['Trend', 'Nisza', 'Wzrost', 'Wyswietlenia', 'Wykres', 'Akcja'] },
-    en: { title: 'Trend Radar', subtitle: 'Rising topics and trend signals for your niche', filters: ['Today', 'This week', 'This month'], all: 'All', hot: 'Hot', growing: 'Rising', growth: 'growth', views: 'views', generate: 'Generate content ->', action: 'Generate', table: ['Trend', 'Niche', 'Growth', 'Views', 'Chart', 'Action'] },
-    es: { title: 'Radar de tendencias', subtitle: 'Temas en crecimiento y senales de tendencia para tu nicho', filters: ['Hoy', 'Esta semana', 'Este mes'], all: 'Todos', hot: 'Caliente', growing: 'En crecimiento', growth: 'crecimiento', views: 'vistas', generate: 'Generar contenido ->', action: 'Generar', table: ['Tendencia', 'Nicho', 'Crecimiento', 'Vistas', 'Grafico', 'Accion'] },
+    pl: { title: 'Trend Radar', subtitle: 'Rosnace tematy i sygnaly trendow, ktore realnie zwiekszaja zasieg i sprzedaz', filters: ['Dzisiaj', 'Ten tydzien', 'Ten miesiac'], all: 'Wszystkie', hot: 'Goracy', growing: 'Rosnacy', growth: 'wzrost', views: 'wyswietlen', generate: 'Wygeneruj tresc ->', action: 'Wygeneruj teraz', table: ['Trend', 'Nisza', 'Wzrost', 'Wyswietlenia', 'Wykres', 'Akcja'] },
+    en: { title: 'Trend Radar', subtitle: 'Rising topics and trend signals that directly increase reach and revenue', filters: ['Today', 'This week', 'This month'], all: 'All', hot: 'Hot', growing: 'Rising', growth: 'growth', views: 'views', generate: 'Generate content ->', action: 'Generate now', table: ['Trend', 'Niche', 'Growth', 'Views', 'Chart', 'Action'] },
+    es: { title: 'Radar de tendencias', subtitle: 'Temas en crecimiento y señales de tendencia que aumentan alcance e ingresos', filters: ['Hoy', 'Esta semana', 'Este mes'], all: 'Todos', hot: 'Caliente', growing: 'En crecimiento', growth: 'crecimiento', views: 'vistas', generate: 'Generar contenido ->', action: 'Generar ahora', table: ['Tendencia', 'Nicho', 'Crecimiento', 'Vistas', 'Grafico', 'Accion'] },
   });
   const [activeNiche, setActiveNiche] = useState('all');
   const [activeFilter, setActiveFilter] = useState(copy.filters[1]);
@@ -51,7 +51,7 @@ export default function TrendRadarLocalized() {
                 <div style={{ fontSize: 11, color: 'var(--muted)' }}>{copy.views}</div>
               </div>
             </div>
-            <button className="btn btn-primary btn-sm btn-full" style={{ marginTop: 12 }} onClick={() => navigate('/dashboard/factory')}>{copy.generate}</button>
+            <button className="btn btn-primary btn-sm btn-full btn-pulse-attention" style={{ marginTop: 12 }} onClick={() => navigate('/dashboard/factory')}>{copy.generate}</button>
           </div>
         ))}
       </div>
@@ -78,7 +78,7 @@ export default function TrendRadarLocalized() {
                 <td><span style={{ color: 'var(--green)', fontWeight: 700 }}><TrendingUp size={13} style={{ verticalAlign: 'middle', marginRight: 3 }} />+{trend.growth}%</span></td>
                 <td style={{ color: 'var(--muted)' }}>{trend.views}</td>
                 <td><Sparkline values={[20, 35, 45, 30, 60, 70, trend.growth > 80 ? 100 : 85]} /></td>
-                <td><button className="btn btn-primary btn-sm" onClick={() => navigate('/dashboard/factory')}>{copy.action}</button></td>
+                <td><button className="btn btn-primary btn-sm btn-pulse-attention" onClick={() => navigate('/dashboard/factory')}>{copy.action}</button></td>
               </tr>
             ))}
           </tbody>

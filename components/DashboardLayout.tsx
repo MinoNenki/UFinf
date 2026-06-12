@@ -175,6 +175,7 @@ export default function DashboardLayout() {
   const mainItems = NAV_ITEMS.filter(n => n.section === 'main');
   const toolItems = NAV_ITEMS.filter(n => n.section === 'tools');
   const accountItems = NAV_ITEMS.filter(n => n.section === 'account' && (!n.adminOnly || isAdmin));
+  const spotlightKeys = new Set(['factory', 'publish', 'brain', 'account']);
 
   const lockedAdminPath = (path === '/dashboard/admin' || path === '/dashboard/settings') && !isAdmin;
 
@@ -198,7 +199,7 @@ export default function DashboardLayout() {
           {mainItems.map(({ path: np, key, icon: Icon, badge }) => (
             <button
               key={np}
-              className={`nav-item${path === np ? ' active' : ''}`}
+              className={`nav-item${path === np ? ' active' : ''}${spotlightKeys.has(key) ? ' nav-item-spotlight' : ''}`}
               onClick={() => handleNav(np)}
             >
               <Icon size={17} />
@@ -211,7 +212,7 @@ export default function DashboardLayout() {
           {toolItems.map(({ path: np, key, icon: Icon, badge }) => (
             <button
               key={np}
-              className={`nav-item${path === np ? ' active' : ''}`}
+              className={`nav-item${path === np ? ' active' : ''}${spotlightKeys.has(key) ? ' nav-item-spotlight' : ''}`}
               onClick={() => handleNav(np)}
             >
               <Icon size={17} />
@@ -224,7 +225,7 @@ export default function DashboardLayout() {
           {accountItems.map(({ path: np, key, icon: Icon }) => (
             <button
               key={np}
-              className={`nav-item${path === np ? ' active' : ''}`}
+              className={`nav-item${path === np ? ' active' : ''}${spotlightKeys.has(key) ? ' nav-item-spotlight' : ''}`}
               onClick={() => handleNav(np)}
             >
               <Icon size={17} />
@@ -264,7 +265,7 @@ export default function DashboardLayout() {
               <Zap size={11} style={{ marginRight: 3 }} /> {isAdmin && adminRole ? `${copy.adminRolePrefix}: ${adminRole}` : copy.plan}
             </span>
             <button
-              className="btn btn-primary btn-sm"
+              className="btn btn-primary btn-sm btn-pulse-attention"
               onClick={() => handleNav('/dashboard/factory')}
             >
               {copy.newContent}

@@ -51,6 +51,8 @@ button{font-family:inherit}
 .nav-item:hover{background:var(--panel);color:var(--text);border-color:var(--stroke)}
 .nav-item.active{background:rgba(34,211,238,.1);color:var(--cyan);border-color:rgba(34,211,238,.2)}
 .nav-item.active svg{color:var(--cyan)}
+.nav-item-spotlight{border-color:rgba(251,191,36,.22);background:linear-gradient(90deg,rgba(251,191,36,.12),rgba(236,72,153,.10));animation:pulse-attention 2.8s ease-in-out infinite}
+.nav-item-spotlight:hover{border-color:rgba(251,191,36,.45)}
 .nav-item svg{flex-shrink:0;width:17px;height:17px}
 .nav-badge{margin-left:auto;background:var(--pink);color:white;font-size:11px;font-weight:900;padding:1px 7px;border-radius:99px;min-width:20px;text-align:center}
 .nav-section-label{font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.12em;padding:12px 12px 6px;margin-top:6px}
@@ -68,7 +70,8 @@ button{font-family:inherit}
 .page-header p{color:var(--muted);font-size:13px;margin-top:3px}
 
 /* ===================== CARDS ===================== */
-.card{background:var(--panel);border:1px solid var(--stroke);border-radius:22px;padding:20px;backdrop-filter:blur(20px);transition:border-color .2s,box-shadow .2s}
+.card{background:var(--panel);border:1px solid var(--stroke);border-radius:22px;padding:20px;backdrop-filter:blur(20px);transition:border-color .2s,box-shadow .2s;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,255,255,.10),transparent 35%,rgba(34,211,238,.06));pointer-events:none;opacity:.65}
 .card:hover{border-color:var(--stroke-hover);box-shadow:0 8px 40px rgba(0,0,0,.3)}
 .card-sm{border-radius:16px;padding:14px}
 .card-glow-cyan{box-shadow:0 0 50px var(--cyan-glow);border-color:rgba(34,211,238,.25)}
@@ -105,6 +108,7 @@ button{font-family:inherit}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn-primary{background:linear-gradient(135deg,var(--cyan),#0ea5e9);color:#030d1a;box-shadow:0 6px 24px rgba(34,211,238,.3)}
 .btn-primary:hover:not(:disabled){box-shadow:0 10px 36px rgba(34,211,238,.45);transform:translateY(-1px)}
+.btn-pulse-attention{position:relative;animation:pulse-attention 2.2s ease-in-out infinite}
 .btn-gradient{background:linear-gradient(135deg,var(--pink),var(--violet));color:white;box-shadow:0 6px 24px rgba(139,92,246,.3)}
 .btn-ghost{background:var(--panel);border:1px solid var(--stroke);color:var(--text)}
 .btn-ghost:hover:not(:disabled){background:var(--panel-hover);border-color:var(--stroke-hover)}
@@ -191,6 +195,7 @@ td{padding:13px 16px;font-size:14px}
 .navlinks{display:flex;align-items:center;gap:22px}
 .navlinks a{color:var(--muted);font-size:14px;font-weight:500;transition:color .15s}
 .navlinks a:hover{color:var(--text)}
+.navlink-hot{color:#fef08a!important;text-shadow:0 0 12px rgba(251,191,36,.35);animation:pulse-attention 2.6s ease-in-out infinite}
 
 /* ===================== LANDING — HERO ===================== */
 .hero{max-width:1480px;margin:0 auto;padding:80px 5vw 60px;display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:center}
@@ -290,6 +295,7 @@ td{padding:13px 16px;font-size:14px}
 /* Pricing */
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .price-card{background:var(--panel);border:1px solid var(--stroke);border-radius:26px;padding:26px;backdrop-filter:blur(20px);position:relative;transition:all .2s}
+.price-card::after{content:"";position:absolute;inset:auto 22px 14px 22px;height:2px;background:linear-gradient(90deg,transparent,rgba(34,211,238,.65),rgba(236,72,153,.55),transparent);opacity:.7}
 .price-card.best{border-color:rgba(34,211,238,.38);box-shadow:0 0 70px rgba(34,211,238,.12)}
 .price-badge{display:inline-block;background:rgba(34,211,238,.12);color:#cffafe;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:900;margin-bottom:14px}
 .price-amount{font-size:44px;font-weight:900;letter-spacing:-.06em;line-height:1}
@@ -389,6 +395,7 @@ td{padding:13px 16px;font-size:14px}
 @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes glow{0%,100%{box-shadow:0 0 18px var(--cyan-glow)}50%{box-shadow:0 0 36px rgba(34,211,238,.5)}}
 @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes pulse-attention{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}50%{box-shadow:0 0 24px 2px rgba(251,191,36,.35)}}
 
 .animate-in{animation:fadeIn .35s ease forwards}
 
