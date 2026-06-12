@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type AuthChangeEvent, type Session, type User } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -15,70 +15,274 @@ export const supabase = supabaseConfigured
     })
   : null;
 
-// Simple local auth for MVP (fallback if Supabase not configured)
-export type LocalUser = {
+export type AuthProviderMode = 'supabase' | 'local';
+
+export type AuthUser = {
   id: string;
   email: string;
   displayName: string;
   createdAt: number;
+  emailVerified: boolean;
+  provider: AuthProviderMode;
 };
 
-export function getLocalUser(): LocalUser | null {
-  if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem('ufinf_user');
-  return stored ? JSON.parse(stored) : null;
+export type SignUpResult = {
+  user: AuthUser | null;
+  needsEmailVerification: boolean;
+  provider: AuthProviderMode;
+  warning?: string;
+};
+
+type LocalStoredUser = AuthUser & {
+  passwordHash: string;
+};
+
+const LOCAL_USERS_KEY = 'ufinf_users';
+const LOCAL_SESSION_KEY = 'ufinf_session_user';
+
+function getRedirectTo() {
+  if (typeof window === 'undefined') return undefined;
+  return `${window.location.origin}/auth/callback`;
 }
 
-export function setLocalUser(user: LocalUser) {
+function toAuthUser(user: User): AuthUser {
+  return {
+    id: user.id,
+    email: user.email || '',
+    displayName:
+      (typeof user.user_metadata?.display_name === 'string' && user.user_metadata.display_name) ||
+      (typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name) ||
+      user.email?.split('@')[0] ||
+      'UFInf User',
+    createdAt: user.created_at ? new Date(user.created_at).getTime() : Date.now(),
+    emailVerified: Boolean(user.email_confirmed_at),
+    provider: 'supabase',
+  };
+}
+
+function getLocalUsers(): LocalStoredUser[] {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem(LOCAL_USERS_KEY);
+  if (!stored) return [];
+
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function setLocalUsers(users: LocalStoredUser[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('ufinf_user', JSON.stringify(user));
+  localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+}
+
+export function getLocalUser(): AuthUser | null {
+  if (typeof window === 'undefined') return null;
+  const stored = localStorage.getItem(LOCAL_SESSION_KEY);
+  if (!stored) return null;
+
+  try {
+    return JSON.parse(stored) as AuthUser;
+  } catch {
+    return null;
+  }
+}
+
+export function setLocalUser(user: AuthUser) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(user));
 }
 
 export function clearLocalUser() {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem('ufinf_user');
+  localStorage.removeItem(LOCAL_SESSION_KEY);
 }
 
-export async function registerLocalUser(email: string, password: string, displayName: string) {
-  // Simple validation
+export async function getSupabaseSessionUser() {
+  if (!supabase) return null;
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  return session?.user ? toAuthUser(session.user) : null;
+}
+
+export function onSupabaseAuthStateChange(callback: (user: AuthUser | null, event: AuthChangeEvent, session: Session | null) => void) {
+  if (!supabase) return () => undefined;
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((event, session) => {
+    callback(session?.user ? toAuthUser(session.user) : null, event, session);
+  });
+
+  return () => subscription.unsubscribe();
+}
+
+export async function exchangeSupabaseCodeForSession(code: string) {
+  if (!supabase) throw new Error('Brak konfiguracji Supabase dla weryfikacji email.');
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) throw error;
+  return getSupabaseSessionUser();
+}
+
+export async function resendVerificationEmail(email: string) {
+  if (!supabase) {
+    throw new Error('Ta instalacja nie ma jeszcze skonfigurowanej wysylki maili. Dodaj NEXT_PUBLIC_SUPABASE_URL i NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: getRedirectTo(),
+    },
+  });
+
+  if (error) throw error;
+}
+
+export async function signInWithGoogle() {
+  if (!supabase) {
+    throw new Error('Google login wymaga skonfigurowanego Supabase Auth na webie.');
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: getRedirectTo(),
+      queryParams: {
+        prompt: 'consent',
+        access_type: 'offline',
+      },
+    },
+  });
+
+  if (error) throw error;
+  if (!data?.url) throw new Error('Nie udalo sie wygenerowac linku Google OAuth.');
+
+  window.location.assign(data.url);
+}
+
+export async function registerLocalUser(email: string, password: string, displayName: string): Promise<SignUpResult> {
   if (!email.includes('@') || password.length < 6 || !displayName.trim()) {
     throw new Error('Invalid input');
   }
 
-  const user: LocalUser = {
+  const normalizedEmail = email.trim().toLowerCase();
+  const users = getLocalUsers();
+
+  if (users.some((entry) => entry.email.toLowerCase() === normalizedEmail)) {
+    throw new Error('Account already exists for this email.');
+  }
+
+  const user: AuthUser = {
     id: Math.random().toString(36).slice(2),
-    email,
+    email: normalizedEmail,
     displayName: displayName.trim(),
     createdAt: Date.now(),
+    emailVerified: true,
+    provider: 'local',
   };
 
-  // Store password hash (for MVP only - NOT production ready!)
-  const passwordHash = btoa(password); // Base64 encode (NOT secure, just for demo)
-  localStorage.setItem(`ufinf_pass_${user.id}`, passwordHash);
-  
+  const passwordHash = btoa(password);
+  users.push({ ...user, passwordHash });
+  setLocalUsers(users);
   setLocalUser(user);
-  return user;
+
+  return {
+    user,
+    needsEmailVerification: false,
+    provider: 'local',
+    warning: 'Ta wersja deployu nie ma jeszcze skonfigurowanego providera mail. Konto zostalo aktywowane bez maila. Aby wlaczyc prawdziwa weryfikacje, dodaj NEXT_PUBLIC_SUPABASE_URL i NEXT_PUBLIC_SUPABASE_ANON_KEY w Vercel.',
+  };
 }
 
-export async function loginLocalUser(email: string, password: string) {
-  // Find user by email
-  const stored = localStorage.getItem('ufinf_user');
-  if (!stored) throw new Error('User not found');
+export async function signUpWithEmail(email: string, password: string, displayName: string): Promise<SignUpResult> {
+  if (!supabase) {
+    return registerLocalUser(email, password, displayName);
+  }
 
-  const user: LocalUser = JSON.parse(stored);
-  if (user.email !== email) throw new Error('Invalid credentials');
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim().toLowerCase(),
+    password,
+    options: {
+      data: {
+        display_name: displayName.trim(),
+      },
+      emailRedirectTo: getRedirectTo(),
+    },
+  });
 
-  // Verify password (simple check)
-  const storedHash = localStorage.getItem(`ufinf_pass_${user.id}`);
+  if (error) throw error;
+
+  const sessionUser = data.user ? toAuthUser(data.user) : null;
+  const hasSession = Boolean(data.session?.user);
+
+  if (hasSession && sessionUser) {
+    return {
+      user: sessionUser,
+      needsEmailVerification: false,
+      provider: 'supabase',
+    };
+  }
+
+  return {
+    user: null,
+    needsEmailVerification: true,
+    provider: 'supabase',
+  };
+}
+
+export async function loginLocalUser(email: string, password: string): Promise<AuthUser> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = getLocalUsers().find((entry) => entry.email.toLowerCase() === normalizedEmail);
+  if (!user) throw new Error('User not found');
+
   const incomingHash = btoa(password);
-  if (storedHash !== incomingHash) throw new Error('Invalid credentials');
+  if (user.passwordHash !== incomingHash) throw new Error('Invalid credentials');
 
-  return user;
+  const sessionUser: AuthUser = {
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    createdAt: user.createdAt,
+    emailVerified: user.emailVerified,
+    provider: 'local',
+  };
+
+  setLocalUser(sessionUser);
+  return sessionUser;
+}
+
+export async function signInWithEmail(email: string, password: string): Promise<AuthUser> {
+  if (!supabase) {
+    return loginLocalUser(email, password);
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password,
+  });
+
+  if (error) throw error;
+  if (!data.user) throw new Error('Login failed');
+
+  return toAuthUser(data.user);
+}
+
+export function isEmailVerificationAvailable() {
+  return supabaseConfigured;
 }
 
 export async function logoutUser() {
-  clearLocalUser();
   if (supabase) {
     await supabase.auth.signOut();
+    return;
   }
+
+  clearLocalUser();
 }

@@ -1,49 +1,118 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { getLocalUser, setLocalUser, clearLocalUser, type LocalUser } from './auth';
+import {
+  getLocalUser,
+  getSupabaseSessionUser,
+  isEmailVerificationAvailable,
+  onSupabaseAuthStateChange,
+  resendVerificationEmail,
+  signInWithEmail,
+  signInWithGoogle,
+  signUpWithEmail,
+  supabaseConfigured,
+  type AuthProviderMode,
+  type AuthUser,
+  type SignUpResult,
+  logoutUser,
+} from './auth';
 
 type AuthContextType = {
-  user: LocalUser | null;
+  user: AuthUser | null;
   loading: boolean;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  authMode: AuthProviderMode;
+  emailVerificationAvailable: boolean;
+  signUp: (email: string, password: string, displayName: string) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  resendVerification: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<LocalUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Hydrate from localStorage
-    const stored = getLocalUser();
-    setUser(stored);
-    setLoading(false);
+    let active = true;
+
+    async function hydrate() {
+      if (supabaseConfigured) {
+        const currentUser = await getSupabaseSessionUser();
+        if (!active) return;
+        setUser(currentUser);
+      } else {
+        const stored = getLocalUser();
+        if (!active) return;
+        setUser(stored);
+      }
+
+      if (active) setLoading(false);
+    }
+
+    hydrate();
+
+    if (!supabaseConfigured) {
+      return () => {
+        active = false;
+      };
+    }
+
+    const unsubscribe = onSupabaseAuthStateChange((nextUser) => {
+      if (!active) return;
+      setUser(nextUser);
+      setLoading(false);
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, displayName: string) => {
-    const { registerLocalUser } = await import('./auth');
-    const newUser = await registerLocalUser(email, password, displayName);
-    setUser(newUser);
+    const result = await signUpWithEmail(email, password, displayName);
+    setUser(result.user);
+    return result;
   };
 
   const signIn = async (email: string, password: string) => {
-    const { loginLocalUser } = await import('./auth');
-    const existingUser = await loginLocalUser(email, password);
+    const existingUser = await signInWithEmail(email, password);
     setUser(existingUser);
   };
 
+  const refreshUser = async () => {
+    if (supabaseConfigured) {
+      setUser(await getSupabaseSessionUser());
+      return;
+    }
+
+    setUser(getLocalUser());
+  };
+
   const signOut = async () => {
-    const { logoutUser } = await import('./auth');
     await logoutUser();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        authMode: supabaseConfigured ? 'supabase' : 'local',
+        emailVerificationAvailable: isEmailVerificationAvailable(),
+        signUp,
+        signIn,
+        signInWithGoogle,
+        resendVerification: resendVerificationEmail,
+        signOut,
+        refreshUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

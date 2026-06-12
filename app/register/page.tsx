@@ -8,12 +8,14 @@ import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { signUp, user } = useAuth();
+  const { signUp, signInWithGoogle, resendVerification, emailVerificationAvailable, authMode, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   if (user) {
@@ -24,14 +26,37 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
     try {
-      await signUp(email, password, displayName);
+      const result = await signUp(email, password, displayName);
+      if (result.needsEmailVerification) {
+        setSuccess(`Wyslalem link aktywacyjny na ${email}. Otworz mail i kliknij link, aby aktywowac konto.`);
+        return;
+      }
+
+      if (result.warning) {
+        setSuccess(result.warning);
+      }
+
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    setSuccess('');
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google registration failed');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -73,6 +98,21 @@ export default function RegisterPage() {
           <div style={{ maxWidth: 380, margin: '0 auto', width: '100%' }}>
             <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Create Account</h2>
             <p style={{ fontSize: 13, color: 'rgba(229,237,249,.6)', marginBottom: 32 }}>Start for free — upgrade later.</p>
+
+            <div style={{ background: emailVerificationAvailable ? 'rgba(34,211,238,.1)' : 'rgba(245,158,11,.12)', border: `1px solid ${emailVerificationAvailable ? 'rgba(34,211,238,.25)' : 'rgba(245,158,11,.28)'}`, borderRadius: 10, padding: '12px 14px', fontSize: 13, color: emailVerificationAvailable ? '#b6f4ff' : '#fcd34d', marginBottom: 18 }}>
+              {emailVerificationAvailable
+                ? 'Po rejestracji wysylamy mail aktywacyjny. Dopiero po kliknieciu w link konto jest w pelni zweryfikowane.'
+                : 'Na tym deployu brakuje konfiguracji Supabase Auth w Vercel, wiec prawdziwy mail aktywacyjny nie moze zostac wyslany. Dopiero po dodaniu env wlaczy sie realna weryfikacja email i Google OAuth.'}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={googleLoading}
+              style={{ width: '100%', marginBottom: 16, background: 'rgba(255,255,255,.04)', color: '#e5edf9', border: '1px solid rgba(255,255,255,.14)', borderRadius: 10, padding: '12px 20px', fontSize: 14, fontWeight: 700, cursor: googleLoading ? 'not-allowed' : 'pointer' }}
+            >
+              {googleLoading ? 'Connecting to Google...' : 'Continue with Google'}
+            </button>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Display Name */}
@@ -179,6 +219,12 @@ export default function RegisterPage() {
                 </div>
               )}
 
+              {success && (
+                <div style={{ background: 'rgba(34,197,94,.15)', border: '1px solid rgba(34,197,94,.28)', borderRadius: 8, padding: '10px 14px', color: '#bbf7d0', fontSize: 13 }}>
+                  {success}
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={loading}
@@ -211,6 +257,20 @@ export default function RegisterPage() {
                   Log in
                 </a>
               </p>
+              {emailVerificationAvailable && email ? (
+                <button
+                  type="button"
+                  onClick={() => resendVerification(email).then(() => setSuccess(`Ponowilem wysylke linku aktywacyjnego na ${email}.`)).catch((err) => setError(err instanceof Error ? err.message : 'Could not resend verification email'))}
+                  style={{ marginTop: 12, background: 'none', border: 'none', color: '#22d3ee', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
+                >
+                  Resend verification email
+                </button>
+              ) : null}
+              {authMode === 'local' ? (
+                <p style={{ fontSize: 12, color: 'rgba(229,237,249,.45)', marginTop: 10 }}>
+                  Fallback local mode aktywny do czasu dodania env Supabase na webie.
+                </p>
+              ) : null}
             </div>
           </div>
         </div>

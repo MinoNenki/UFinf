@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { navigate } from '@/lib/navigate';
 import { byLanguage, useI18n } from '@/lib/i18n';
+import { useAuth } from '@/lib/authContext';
 import DashboardHome from './DashboardHomeLocalized';
 import ContentFactory from './ContentFactoryLocalized';
 import TrendRadar from './TrendRadarLocalized';
@@ -121,6 +122,7 @@ function renderPage(path: string, isAdmin: boolean, adminRole: string | undefine
 
 export default function DashboardLayout() {
   const { language } = useI18n();
+  const { user, signOut } = useAuth();
   const copy = byLanguage(language, COPY);
   const [path, setPath] = useState('/dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -146,6 +148,11 @@ export default function DashboardLayout() {
     await fetch('/api/admin/logout', { method: 'POST' });
     await refreshAdminSession();
     handleNav('/dashboard/account');
+  }
+
+  async function logoutUserAccount() {
+    await signOut();
+    navigate('/login');
   }
 
   useEffect(() => {
@@ -273,20 +280,24 @@ export default function DashboardLayout() {
             <button className="btn btn-ghost btn-sm" onClick={() => handleNav('/dashboard/account')}>
               <UserCircle2 size={13} /> {copy.myAccount}
             </button>
-            {!isAdmin ? (
+            {!user && !isAdmin ? (
               <button className="btn btn-ghost btn-sm" onClick={() => handleNav('/dashboard/account')}>
                 {copy.register}
               </button>
             ) : null}
-            {!isAdmin ? (
+            {!user && !isAdmin ? (
               <button className="btn btn-ghost btn-sm" onClick={() => handleNav('/dashboard/admin')}>
                 <LogIn size={13} /> {copy.login}
               </button>
-            ) : (
+            ) : isAdmin ? (
               <button className="btn btn-danger btn-sm" onClick={logoutAdmin}>
                 <LogOut size={13} /> {copy.logout}
               </button>
-            )}
+            ) : user ? (
+              <button className="btn btn-danger btn-sm" onClick={logoutUserAccount}>
+                <LogOut size={13} /> {copy.logout}
+              </button>
+            ) : null}
             <button
               className="btn btn-ghost btn-sm"
               onClick={() => navigate('/')}

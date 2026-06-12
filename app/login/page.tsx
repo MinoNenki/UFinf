@@ -8,10 +8,11 @@ import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, user } = useAuth();
+  const { signIn, signInWithGoogle, emailVerificationAvailable, authMode, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -31,6 +32,18 @@ export default function LoginPage() {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google login failed');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -60,6 +73,21 @@ export default function LoginPage() {
           <div style={{ maxWidth: 380, margin: '0 auto', width: '100%' }}>
             <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Log in</h2>
             <p style={{ fontSize: 13, color: 'rgba(229,237,249,.6)', marginBottom: 32 }}>Welcome back.</p>
+
+            <div style={{ background: emailVerificationAvailable ? 'rgba(34,211,238,.1)' : 'rgba(245,158,11,.12)', border: `1px solid ${emailVerificationAvailable ? 'rgba(34,211,238,.25)' : 'rgba(245,158,11,.28)'}`, borderRadius: 10, padding: '12px 14px', fontSize: 13, color: emailVerificationAvailable ? '#b6f4ff' : '#fcd34d', marginBottom: 18 }}>
+              {emailVerificationAvailable
+                ? 'Logowanie email i Google dziala przez Supabase Auth. Po rejestracji konto moze wymagac klikniecia w link z maila.'
+                : 'Ta produkcja nie ma jeszcze podpietego Supabase na webie. Naprawilem trwale logowanie fallback, ale prawdziwe maile weryfikacyjne i Google login wymagaja env w Vercel.'}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={googleLoading}
+              style={{ width: '100%', marginBottom: 16, background: 'rgba(255,255,255,.04)', color: '#e5edf9', border: '1px solid rgba(255,255,255,.14)', borderRadius: 10, padding: '12px 20px', fontSize: 14, fontWeight: 700, cursor: googleLoading ? 'not-allowed' : 'pointer' }}
+            >
+              {googleLoading ? 'Connecting to Google...' : 'Continue with Google'}
+            </button>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* Email */}
@@ -168,6 +196,11 @@ export default function LoginPage() {
                   Create one
                 </a>
               </p>
+              {authMode === 'local' ? (
+                <p style={{ fontSize: 12, color: 'rgba(229,237,249,.45)', marginTop: 10 }}>
+                  Local fallback mode is active until Supabase envs are added on this deployment.
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
