@@ -22,8 +22,8 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
   const copy = byLanguage(language, {
     pl: {
       nav: { factory: 'Factory', trends: 'Trends', dashboard: 'Dashboard', pricing: 'Ceny', login: 'Logowanie', logout: 'Wylogowanie', account: 'Moje konto', register: 'Zarejestruj sie', enter: 'Wejdz do dashboardu ->' },
-      heroA: { eyebrow: 'UFInf — Ultra Future Influencer | Twoj AI engine do globalnego wzrostu', title1: 'Publikuj inteligentniej. Zarabiaj wiecej. Zero pracy manual.', title2: 'Jeden klik. Wszystkie platformy. Maksymalny docho d.', subtitle: 'UFInf to kompletny stos wzrostu: produkcja AI, dystrybucja multipletaforma, analityka realtime i strategi a wzrostu. Jeden film -> optymalne pakiety pod TikTok, YouTube, Instagram, Facebook i X. Skaluj zasieg i docho d 10x szybciej.', main: 'Zacznij za darmo teraz', alt: 'Zobaczacz case study' },
-      heroB: { eyebrow: 'UFInf — AI revolution dla creator economy', title1: 'One Click Publish + AI Content Brain.', title2: 'Wiekszy docho d. Zero chaosu.', subtitle: 'UFInf analizuje co dziala dla Ciebie, znajduje najlepsze czasy publikacji, sugeruje top tematy i publikuje wszedzie automatycznie. Rezultat: +70% wiecej wyswietlenia n, 3x szybszy wzrost.', main: 'Zacznij strategie wzrostu', alt: 'Dowiedz sie wiecej' },
+      heroA: { eyebrow: 'UFInf - Ultra Future Influencer | Twoj AI engine do globalnego wzrostu', title1: 'Publikuj inteligentniej. Zarabiaj wiecej. Zero pracy recznej.', title2: 'Jeden klik. Wszystkie platformy. Maksymalny dochod.', subtitle: 'UFInf to kompletny system wzrostu: produkcja AI, dystrybucja multiplatformowa, analityka realtime i strategia wzrostu. Jeden film -> gotowe pakiety pod TikTok, YouTube, Instagram, Facebook i X. Skaluj zasieg i przychod 10x szybciej.', main: 'Zacznij za darmo', alt: 'Zobacz case study' },
+      heroB: { eyebrow: 'UFInf - AI growth stack dla creator economy', title1: 'One Click Publish + AI Content Brain.', title2: 'Wiekszy przychod. Zero chaosu.', subtitle: 'UFInf analizuje, co dziala u Ciebie, znajduje najlepsze godziny publikacji, podpowiada top tematy i publikuje wszedzie automatycznie. Efekt: wiecej wyswietlen i szybszy wzrost.', main: 'Uruchom strategia wzrostu', alt: 'Dowiedz sie wiecej' },
       score: 'Growth Score', publishWindow: 'Publikuj dzis 18:00-20:00', sectionLabels: ['System produktu', 'Live MVP', 'Anti-loss', 'Monetyzacja'],
       enterprise: ['Gotowe na App Store i Google Play', 'One Click Publish orchestration', 'AI Content Brain insights engine', 'Anti-loss control layer', 'Multi-workspace dla agencji'],
       stats: ['Tworcow aktywnych', 'Generacji tresci', 'Sredni wzrost kanalu', 'Zaoszczedzone godziny'],
@@ -40,7 +40,7 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
       demo: { title: 'Content Factory + Growth Coach', topic: 'Temat / link / pomysl / opis filmu', niche: 'Nisza', plan: 'Plan', estimated: 'Szacowany koszt', active: 'Budget guard aktywny', button: 'Wygeneruj pakiet tresci', loading: 'Generuje pakiet...', emptyTitle: 'Wynik pojawi sie tutaj', emptyText: 'MVP dziala w trybie bezpiecznego demo - bez spalania kluczy API.', planToday: 'Plan na dzis', content: 'Tresci', blocked: 'Budget Guard zablokowal request', defaultTopic: 'Wrzuc jeden film YouTube i zrob z niego serie na TikTok, Shorts, Reels, Facebook i X', defaultNiche: 'AI / biznes / edukacja', apiError: 'Blad polaczenia z API.' },
       security: { title: 'Zabezpieczenia przed spaleniem budzetu i kluczy API', text: 'Projekt ma juz warstwe ochronna: limity planow, limit kosztu jednego requestu, tryb demo bez API, estymacje kosztu i dzienne limity globalne.', items: [['Limit requestu', 'Kazdy request ma maksymalny koszt USD'], ['Brak kluczy w frontendzie', 'API keys tylko po stronie serwera'], ['Safe demo mode', 'Dziala bez kluczy AI'], ['Gotowe pod platformy', 'TikTok, YouTube, IG, FB, X']] },
       pricing: { title: '🚀 Wybierz plan i zacznij rosnac juz dzis', plans: [['Free', '$0', 'Zacznij bez ryzyka', 'Przetestuj za darmo — 5 generacji dziennie, bez karty kredytowej'], ['Pro', '$24', '⭐ Najlepszy start', 'Rosnij bez limitow — 60 generacji dziennie, Trend Radar, Growth Coach i Smart Inbox'], ['Premium Plus', '$69', '🔥 Nasz bestseller', 'Pełna automatyzacja — 180 generacji, One Click Publish, AI Content Brain i Revenue AI'], ['Expert', '$119', '💎 Dla ambitnych', '360 generacji dziennie — priorytetowe przetwarzanie, pełny stack, dedykowane wsparcie']], choose: 'Zacznij teraz', start: 'Zacznij teraz ->', topup: '💡 Potrzebujesz wiecej na raz? Dokup jednorazowo: 25 generacji za $9, 75 za $19, 150 za $39 — bez zobowiaza n, bez abonamentu' },
-      cta: { title: 'UFInf: Twoj system wzrostu creator-first, bez limitow.', text: 'Dolacz do tysiecy tworcow, ktorzy publikuja szybciej, zarabiaja wiecej i nie tracą czasu na reczne zarzadzanie contentem. Zacznij dzis — za darmo.', growth: 'Zacznij za darmo', admin: '' },
+      cta: { title: 'UFInf: Twoj globalny system wzrostu creator-first.', text: 'Dolacz do tysiecy tworcow, ktorzy publikuja szybciej, zarabiaja wiecej i nie traca czasu na reczne zarzadzanie contentem. Zacznij dzis - za darmo.', growth: 'Zacznij za darmo', admin: '' },
       footer: { text: 'UFInf - Ultra Future Influencer - 2026 - Built to scale', pricing: 'Cennik', features: 'Features' },
     },
     en: {
@@ -162,7 +162,7 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
   return (
     <main className="page-bg">
       <nav className="nav">
-        <div className="brand"><span className="logo"><Sparkles size={17} color="#030d1a" /></span>USInf.com</div>
+        <div className="brand"><span className="logo"><Sparkles size={17} color="#030d1a" /></span>UFInf</div>
         <div className="navlinks"><a href="#factory">{copy.nav.factory}</a><a href="#trends">{copy.nav.trends}</a><a href="/dashboard" className="navlink-hot">{copy.nav.dashboard}</a><a href="#pricing" className="navlink-hot">{copy.nav.pricing}</a></div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <LanguageSwitcher compact />
@@ -175,7 +175,7 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
       <section className="hero">
         <div>
           <div className="eyebrow"><Rocket size={14} /> {hero.eyebrow}</div>
-          <h1>{hero.title1}<br /><span className="gradient-text">USInf.com</span><br />{hero.title2}</h1>
+          <h1>{hero.title1}<br /><span className="gradient-text">UFInf</span><br />{hero.title2}</h1>
           <p className="lead">{hero.subtitle}</p>
           <div className="cta-row"><a href="/dashboard" className="btn btn-primary btn-lg btn-pulse-attention">{hero.main} <ArrowRight size={18} /></a><a href="#pricing" className="btn btn-ghost btn-lg navlink-hot">{hero.alt}</a></div>
           <div className="platforms-row">{PLATFORMS.map((platform) => <span key={platform.name} className={`badge ${platform.cls}`}>{platform.name}</span>)}</div>

@@ -12,7 +12,7 @@ export default function AdminLogin({ onSuccess }: Props) {
   const copy = byLanguage(language, {
     pl: {
       title: 'Dostep administratora',
-      intro: 'Panel admina jest ukryty. Zaloguj sie kontem administratora USInf.com.',
+      intro: 'Panel admina UFInf. Zaloguj sie kontem administratora.',
       email: 'Email admina',
       password: 'Haslo admina',
       otp: 'Kod 2FA (TOTP)',
@@ -23,7 +23,7 @@ export default function AdminLogin({ onSuccess }: Props) {
     },
     en: {
       title: 'Administrator access',
-      intro: 'The admin panel is hidden. Sign in with the USInf.com administrator account.',
+      intro: 'UFInf admin panel. Sign in with the administrator account.',
       email: 'Admin email',
       password: 'Admin password',
       otp: '2FA code (TOTP)',
@@ -34,7 +34,7 @@ export default function AdminLogin({ onSuccess }: Props) {
     },
     es: {
       title: 'Acceso de administrador',
-      intro: 'El panel admin esta oculto. Inicia sesion con la cuenta de administrador de USInf.com.',
+      intro: 'Panel de administrador de UFInf. Inicia sesion con la cuenta de administrador.',
       email: 'Correo del admin',
       password: 'Contrasena del admin',
       otp: 'Codigo 2FA (TOTP)',
@@ -76,7 +76,7 @@ export default function AdminLogin({ onSuccess }: Props) {
       </p>
       <div className="form-group">
         <label className="form-label">{copy.email}</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@usinf.com" />
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@ufinf.com" />
       </div>
       <div className="form-group">
         <label className="form-label">{copy.password}</label>
