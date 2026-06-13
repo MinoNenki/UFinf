@@ -50,6 +50,8 @@ type FreeAssetGroup = {
   }>;
 };
 
+const LOCAL_HISTORY_KEY = 'ufinf_studio_history_v1';
+
 export default function Studio() {
   const { language } = useI18n();
   const copy = byLanguage(language, {
@@ -288,17 +290,45 @@ export default function Studio() {
     setHistoryLoading(true);
     setHistoryError(null);
     try {
+      const localItems = readLocalHistory();
       const res = await fetch('/api/studio/history?limit=12', { cache: 'no-store' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setHistoryError(String(data?.error || 'History load failed.'));
+        setHistoryItems(localItems);
         return;
       }
-      setHistoryItems(Array.isArray(data?.items) ? data.items as HistoryItem[] : []);
+      const remoteItems = Array.isArray(data?.items) ? data.items as HistoryItem[] : [];
+      const merged = [...localItems, ...remoteItems]
+        .filter((item, index, all) => all.findIndex((candidate) => candidate.id === item.id) === index)
+        .slice(0, 12);
+      setHistoryItems(merged);
     } catch {
       setHistoryError(language === 'pl' ? 'Nie udalo sie wczytac historii Studio.' : language === 'es' ? 'No se pudo cargar el historial de Studio.' : 'Failed to load Studio history.');
+      setHistoryItems(readLocalHistory());
     } finally {
       setHistoryLoading(false);
+    }
+  }
+
+  function readLocalHistory() {
+    if (typeof window === 'undefined') return [] as HistoryItem[];
+    try {
+      const raw = window.localStorage.getItem(LOCAL_HISTORY_KEY);
+      if (!raw) return [] as HistoryItem[];
+      const parsed = JSON.parse(raw) as unknown;
+      return Array.isArray(parsed) ? parsed as HistoryItem[] : [];
+    } catch {
+      return [] as HistoryItem[];
+    }
+  }
+
+  function writeLocalHistory(items: HistoryItem[]) {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(items.slice(0, 20)));
+    } catch {
+      // Ignore storage quota issues to keep generation flow uninterrupted.
     }
   }
 
@@ -332,7 +362,11 @@ export default function Studio() {
 
   function prependHistoryItem(item: HistoryItem | null | undefined) {
     if (!item) return;
-    setHistoryItems((prev) => [item, ...prev.filter((entry) => entry.id !== item.id)].slice(0, 12));
+    setHistoryItems((prev) => {
+      const merged = [item, ...prev.filter((entry) => entry.id !== item.id)].slice(0, 12);
+      writeLocalHistory(merged);
+      return merged;
+    });
   }
 
   function downloadImageAsset(imageUrl: string, fileTopic: string) {
