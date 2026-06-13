@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { budgetGuard } from '@/lib/budget';
 import type { PlanKey } from '@/lib/settings';
-import { generateGrowthPackFromProvider } from '@/lib/server/aiProvider';
+import { generateGrowthPackFromProvider, rankAndAutoFixPromptInput } from '@/lib/server/aiProvider';
 import { readSettings } from '@/lib/server/settingsStore';
 import { reserveUsage } from '@/lib/server/usageStore';
 import { buildOneClickHybridPlan } from '@/lib/server/hybridEngine';
@@ -43,18 +43,27 @@ export async function POST(req: Request) {
     language,
   });
 
+  const promptPreparation = rankAndAutoFixPromptInput({
+    topic: generationTopic,
+    niche: String(body.niche || 'creator economy'),
+    platform: String(body.platform || 'all'),
+    campaignGoal: strategy.goal,
+    styleMode: strategy.styleMode,
+    styleProfile: strategy.styleProfile,
+  });
+
   let result;
   try {
     result = await generateGrowthPackFromProvider({
-      topic: generationTopic,
-      platform: String(body.platform || 'all'),
-      niche: String(body.niche || 'creator economy'),
+      topic: promptPreparation.fixedInput.topic,
+      platform: promptPreparation.fixedInput.platform,
+      niche: promptPreparation.fixedInput.niche,
       language,
       openaiApiKey: settings.apiKeys.openaiApiKey,
       anthropicApiKey: settings.apiKeys.anthropicApiKey,
-      campaignGoal: strategy.goal,
-      styleMode: strategy.styleMode,
-      styleProfile: strategy.styleProfile,
+      campaignGoal: promptPreparation.fixedInput.campaignGoal,
+      styleMode: promptPreparation.fixedInput.styleMode,
+      styleProfile: promptPreparation.fixedInput.styleProfile,
       strategy,
     });
   } catch (error) {
@@ -82,5 +91,6 @@ export async function POST(req: Request) {
     hybridPlan,
     mode: 'real_ai',
     strategy,
+    promptQuality: promptPreparation.quality,
   });
 }

@@ -28,10 +28,28 @@ const SHORT_VIDEO_TEMPLATES = [
   { id: 'ecommerce-sales', label: 'Ecommerce: Sprzedaz', niche: 'AI / tech', goal: 'sales', styleHint: 'product-led storytelling, offer-stack clarity, conversion-focused CTA' },
   { id: 'gaming-community', label: 'Gaming: Community', niche: 'Gaming', goal: 'community', styleHint: 'high-energy pacing, neon accents, co-op vibe, strong comment bait' },
   { id: 'education-leads', label: 'Edukacja: Leady', niche: 'Creator Economy', goal: 'leads', styleHint: 'clarity-first teaching, step overlays, practical lead magnet CTA' },
+  { id: 'travel-awareness', label: 'Travel: Viral Discovery', niche: 'Travel', goal: 'awareness', styleHint: 'cinematic discovery shots, geo-story pacing, curiosity-first hooks' },
+  { id: 'food-sales', label: 'Food: Conversion Menu', niche: 'Food', goal: 'sales', styleHint: 'close-up sensory cuts, irresistible offer stack, fast appetite triggers' },
+  { id: 'fitness-leads', label: 'Fitness: Lead Magnet', niche: 'Fitness', goal: 'leads', styleHint: 'performance coach vibe, tangible milestones, challenge-based CTA' },
+  { id: 'lifestyle-authority', label: 'Lifestyle: Premium Authority', niche: 'Lifestyle', goal: 'authority', styleHint: 'editorial vlog aesthetic, credible routines, anti-hype expert framing' },
+  { id: 'tech-awareness', label: 'Tech: Pattern Break', niche: 'AI / tech', goal: 'awareness', styleHint: 'future-forward visuals, myth-busting openers, precision language' },
+  { id: 'creator-community', label: 'Creator: Audience Loop', niche: 'Creator Economy', goal: 'community', styleHint: 'comment-driven narrative, collab invitations, social proof loops' },
+  { id: 'gaming-sales', label: 'Gaming: Offer Push', niche: 'Gaming', goal: 'sales', styleHint: 'high-retention pacing, power-up progression, urgency CTA' },
+  { id: 'finance-leads', label: 'Finance: Lead Engine', niche: 'Finance', goal: 'leads', styleHint: 'clarity-first money framework, practical examples, trust-forward lead magnet CTA' },
 ] as const;
 
 type ContentResult = {
   guard?: { estimatedCost: number; allowed: boolean };
+  promptQuality?: {
+    score: number;
+    issues: Array<{
+      key: string;
+      message: string;
+      penalty: number;
+      autoFix: string;
+    }>;
+    appliedAutoFixes: string[];
+  };
   strategy?: {
     goal: string;
     styleMode: string;
@@ -106,6 +124,10 @@ export default function ContentFactory() {
       strategyCta: 'Formula CTA',
       strategyVisual: 'Kierunek wizualny',
       strategyCadence: 'Tempo montazu',
+      promptRankTitle: 'Ranking jakosci promptu',
+      promptScore: 'Wynik',
+      promptFixes: 'Auto-fix',
+      promptIssues: 'Wykryte problemy',
     },
     en: {
       title: 'Content Factory',
@@ -152,6 +174,10 @@ export default function ContentFactory() {
       strategyCta: 'CTA formula',
       strategyVisual: 'Visual direction',
       strategyCadence: 'Edit cadence',
+      promptRankTitle: 'Prompt quality ranking',
+      promptScore: 'Score',
+      promptFixes: 'Auto-fix',
+      promptIssues: 'Detected issues',
     },
     es: {
       title: 'Fabrica de contenido',
@@ -198,6 +224,10 @@ export default function ContentFactory() {
       strategyCta: 'Formula de CTA',
       strategyVisual: 'Direccion visual',
       strategyCadence: 'Cadencia de edicion',
+      promptRankTitle: 'Ranking de calidad del prompt',
+      promptScore: 'Puntuacion',
+      promptFixes: 'Auto-fix',
+      promptIssues: 'Problemas detectados',
     },
   });
 
@@ -343,7 +373,7 @@ export default function ContentFactory() {
 
           <div className="form-group">
             <label className="form-label">{copy.topic}</label>
-            <textarea value={topic} onChange={(e) => setTopic(e.target.value)} placeholder={copy.placeholder} style={{ minHeight: 120 }} />
+            <textarea data-testid="cf-topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder={copy.placeholder} style={{ minHeight: 120 }} />
           </div>
 
           <div className="form-group">
@@ -369,21 +399,21 @@ export default function ContentFactory() {
             </div>
           </div>
 
-          <div className="form-group"><label className="form-label">{copy.niche}</label><select value={niche} onChange={(e) => setNiche(e.target.value)}>{NICHES.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
-          <div className="form-group"><label className="form-label">{copy.campaignGoal}</label><select value={campaignGoal} onChange={(e) => setCampaignGoal(e.target.value)}>{CAMPAIGN_GOALS.map((goal) => <option key={goal.id} value={goal.id}>{goal.label}</option>)}</select></div>
+          <div className="form-group"><label className="form-label">{copy.niche}</label><select data-testid="cf-niche" value={niche} onChange={(e) => setNiche(e.target.value)}>{NICHES.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
+          <div className="form-group"><label className="form-label">{copy.campaignGoal}</label><select data-testid="cf-campaign-goal" value={campaignGoal} onChange={(e) => setCampaignGoal(e.target.value)}>{CAMPAIGN_GOALS.map((goal) => <option key={goal.id} value={goal.id}>{goal.label}</option>)}</select></div>
 
           <div className="form-group">
             <label className="form-label">{copy.styleMode}</label>
             <div className="checkbox-group">
-              <label className={`checkbox-item${styleMode === 'auto' ? ' selected' : ''}`}><input type="radio" name="styleMode" checked={styleMode === 'auto'} onChange={() => setStyleMode('auto')} /><span>{copy.styleAuto}</span></label>
-              <label className={`checkbox-item${styleMode === 'manual' ? ' selected' : ''}`}><input type="radio" name="styleMode" checked={styleMode === 'manual'} onChange={() => setStyleMode('manual')} /><span>{copy.styleManual}</span></label>
+              <label className={`checkbox-item${styleMode === 'auto' ? ' selected' : ''}`}><input data-testid="cf-style-auto" type="radio" name="styleMode" checked={styleMode === 'auto'} onChange={() => setStyleMode('auto')} /><span>{copy.styleAuto}</span></label>
+              <label className={`checkbox-item${styleMode === 'manual' ? ' selected' : ''}`}><input data-testid="cf-style-manual" type="radio" name="styleMode" checked={styleMode === 'manual'} onChange={() => setStyleMode('manual')} /><span>{copy.styleManual}</span></label>
             </div>
           </div>
 
           {styleMode === 'manual' && (
             <div className="form-group">
               <label className="form-label">{copy.styleHint}</label>
-              <input type="text" value={manualStyleHint} onChange={(event) => setManualStyleHint(event.target.value)} placeholder={copy.styleHintPlaceholder} />
+              <input data-testid="cf-style-hint" type="text" value={manualStyleHint} onChange={(event) => setManualStyleHint(event.target.value)} placeholder={copy.styleHintPlaceholder} />
             </div>
           )}
 
@@ -392,7 +422,7 @@ export default function ContentFactory() {
             <p style={{ color: 'var(--muted)', fontSize: 12, marginBottom: 8 }}>{copy.templatesSubtitle}</p>
             <div className="checkbox-group" style={{ gap: 8 }}>
               {SHORT_VIDEO_TEMPLATES.map((template) => (
-                <button key={template.id} type="button" className="btn btn-ghost btn-sm" onClick={() => applyTemplate(template.id)}><WandSparkles size={13} /> {template.label}</button>
+                <button data-testid={`cf-template-${template.id}`} key={template.id} type="button" className="btn btn-ghost btn-sm" onClick={() => applyTemplate(template.id)}><WandSparkles size={13} /> {template.label}</button>
               ))}
             </div>
           </div>
@@ -419,8 +449,8 @@ export default function ContentFactory() {
             </div>
           </div>
 
-          <button className="btn btn-primary btn-full" onClick={generate} disabled={loading || (!topic.trim() && attachments.length === 0) || selectedPlatforms.length === 0} style={{ marginTop: 12 }}>
-            {loading ? <><Loader size={15} style={{ animation: 'spin .7s linear infinite' }} /> {copy.generating}</> : `Generate: ${copy.generate}`}
+          <button data-testid="cf-generate" className="btn btn-primary btn-full" onClick={generate} disabled={loading || (!topic.trim() && attachments.length === 0) || selectedPlatforms.length === 0} style={{ marginTop: 12 }}>
+            {loading ? <><Loader size={15} style={{ animation: 'spin .7s linear infinite' }} /> {copy.generating}</> : copy.generate}
           </button>
 
           {result?.error && <div className="alert alert-error" style={{ marginTop: 12 }}>{result.error}</div>}
@@ -445,6 +475,37 @@ export default function ContentFactory() {
 
           {!loading && result?.result && (
             <div className="animate-in">
+              {result.promptQuality && (
+                <div data-testid="cf-prompt-quality" className="card" style={{ marginBottom: 14, background: 'rgba(255,255,255,.03)' }}>
+                  <h4 style={{ fontSize: 14, marginBottom: 8 }}>{copy.promptRankTitle}</h4>
+                  <div style={{ fontSize: 12, marginBottom: 8 }}>
+                    <strong>{copy.promptScore}:</strong> {result.promptQuality.score}/100
+                  </div>
+                  {result.promptQuality.issues.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>{copy.promptIssues}</div>
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        {result.promptQuality.issues.map((issue) => (
+                          <div key={issue.key} style={{ fontSize: 12 }}>
+                            - {issue.message} (-{issue.penalty})
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {result.promptQuality.appliedAutoFixes.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>{copy.promptFixes}</div>
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        {result.promptQuality.appliedAutoFixes.map((fix, idx) => (
+                          <div key={`${fix}-${idx}`} style={{ fontSize: 12 }}>- {fix}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {result.strategy && (
                 <div className="card" style={{ marginBottom: 14, background: 'rgba(255,255,255,.03)' }}>
                   <h4 style={{ fontSize: 14, marginBottom: 8 }}>{copy.strategyTitle}</h4>
@@ -493,7 +554,7 @@ export default function ContentFactory() {
                   <h4 style={{ fontSize: 14, marginBottom: 10, color: 'var(--muted)' }}>{copy.ideasTitle}</h4>
                   {result.result.nextIdeas.map((idea, i) => (
                     <div key={i} style={{ padding: '8px 12px', background: 'rgba(255,255,255,.04)', borderRadius: 10, marginBottom: 8, fontSize: 14 }}>
-                      đź’ˇ {idea}
+                      * {idea}
                     </div>
                   ))}
                 </div>

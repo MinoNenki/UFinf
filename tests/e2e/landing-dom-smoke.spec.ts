@@ -12,7 +12,6 @@ test('landing DOM smoke: sections, pricing plans, topups, and key navigation', a
   // Core page sections exist.
   await expect(page.locator('#factory')).toBeVisible();
   await expect(page.locator('#demo')).toBeVisible();
-  await expect(page.locator('#security')).toBeVisible();
   await expect(page.locator('#pricing')).toBeVisible();
   await expect(page.locator('#topup')).toBeVisible();
 

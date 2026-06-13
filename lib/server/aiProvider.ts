@@ -34,6 +34,31 @@ type GrowthPack = {
   coach: string[];
 };
 
+type PromptQualityIssue = {
+  key: string;
+  message: string;
+  penalty: number;
+  autoFix: string;
+};
+
+export type PromptQualityReport = {
+  score: number;
+  issues: PromptQualityIssue[];
+  appliedAutoFixes: string[];
+};
+
+export type PromptPreparationResult = {
+  fixedInput: {
+    topic: string;
+    niche: string;
+    platform: string;
+    campaignGoal: string;
+    styleMode: string;
+    styleProfile: string;
+  };
+  quality: PromptQualityReport;
+};
+
 function readEnvLocalMap() {
   const candidates = [
     path.join(process.cwd(), '.env.local'),
@@ -107,6 +132,122 @@ function normalizePack(raw: unknown, language: AiLanguage): GrowthPack {
     hashtags: asStringArray(source.hashtags, []),
     nextIdeas: asStringArray(source.nextIdeas, []),
     coach: asStringArray(source.coach, []),
+  };
+}
+
+function normalizeInline(value: string) {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+export function rankAndAutoFixPromptInput(input: {
+  topic: string;
+  niche: string;
+  platform: string;
+  campaignGoal?: string;
+  styleMode?: string;
+  styleProfile?: string;
+}): PromptPreparationResult {
+  const issues: PromptQualityIssue[] = [];
+  const fixes: string[] = [];
+
+  let fixedTopic = normalizeInline(input.topic || '');
+  let fixedNiche = normalizeInline(input.niche || '');
+  let fixedPlatform = normalizeInline(input.platform || '');
+  let fixedGoal = normalizeInline(input.campaignGoal || 'awareness').toLowerCase();
+  let fixedStyleMode = normalizeInline(input.styleMode || 'auto').toLowerCase();
+  let fixedStyleProfile = normalizeInline(input.styleProfile || '');
+
+  if (!fixedTopic) {
+    issues.push({
+      key: 'topic.empty',
+      message: 'Topic is empty or missing.',
+      penalty: 50,
+      autoFix: 'Inserted fallback topic skeleton with audience, pain, and CTA context.',
+    });
+    fixedTopic = 'Creator growth campaign: define target audience, core pain, differentiator, proof point, and a direct CTA.';
+    fixes.push('Filled missing topic with a campaign-ready fallback brief.');
+  } else if (fixedTopic.length < 18) {
+    issues.push({
+      key: 'topic.too_short',
+      message: 'Topic is too short for high-quality output.',
+      penalty: 20,
+      autoFix: 'Expanded topic with execution constraints and audience context.',
+    });
+    fixedTopic = `${fixedTopic}. Include audience pain, unique promise, and measurable CTA.`;
+    fixes.push('Expanded short topic with strategic execution constraints.');
+  }
+
+  if (!fixedNiche) {
+    issues.push({
+      key: 'niche.empty',
+      message: 'Niche is missing.',
+      penalty: 8,
+      autoFix: 'Set niche to creator economy by default.',
+    });
+    fixedNiche = 'creator economy';
+    fixes.push('Set fallback niche to creator economy.');
+  }
+
+  if (!fixedPlatform) {
+    issues.push({
+      key: 'platform.empty',
+      message: 'Requested platform list is empty.',
+      penalty: 10,
+      autoFix: 'Set default short-form platform set.',
+    });
+    fixedPlatform = 'tiktok,youtube,instagram';
+    fixes.push('Applied fallback platform set: tiktok,youtube,instagram.');
+  }
+
+  const validGoals = new Set(['awareness', 'leads', 'sales', 'authority', 'community']);
+  if (!validGoals.has(fixedGoal)) {
+    issues.push({
+      key: 'goal.invalid',
+      message: 'Campaign goal is invalid.',
+      penalty: 6,
+      autoFix: 'Replaced invalid campaign goal with awareness.',
+    });
+    fixedGoal = 'awareness';
+    fixes.push('Normalized invalid campaign goal to awareness.');
+  }
+
+  if (fixedStyleMode !== 'auto' && fixedStyleMode !== 'manual') {
+    issues.push({
+      key: 'style_mode.invalid',
+      message: 'Style mode is invalid.',
+      penalty: 4,
+      autoFix: 'Replaced invalid style mode with auto.',
+    });
+    fixedStyleMode = 'auto';
+    fixes.push('Normalized invalid style mode to auto.');
+  }
+
+  if (!fixedStyleProfile) {
+    issues.push({
+      key: 'style_profile.empty',
+      message: 'Style profile is empty.',
+      penalty: 8,
+      autoFix: 'Applied default premium performance style profile.',
+    });
+    fixedStyleProfile = 'high-performance premium social, crisp hook-first copy, platform-native rhythm';
+    fixes.push('Applied fallback style profile for premium short-form output.');
+  }
+
+  const score = Math.max(0, 100 - issues.reduce((sum, issue) => sum + issue.penalty, 0));
+  return {
+    fixedInput: {
+      topic: fixedTopic,
+      niche: fixedNiche,
+      platform: fixedPlatform,
+      campaignGoal: fixedGoal,
+      styleMode: fixedStyleMode,
+      styleProfile: fixedStyleProfile,
+    },
+    quality: {
+      score,
+      issues,
+      appliedAutoFixes: fixes,
+    },
   };
 }
 
