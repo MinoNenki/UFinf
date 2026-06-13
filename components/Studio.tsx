@@ -122,6 +122,10 @@ export default function Studio() {
   const [tone, setTone] = useState(copy.defaultTone);
   const [activePromptType, setActivePromptType] = useState<'image' | 'video'>('image');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
+  const [studioLoading, setStudioLoading] = useState(false);
+  const [studioError, setStudioError] = useState<string | null>(null);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [videoBlueprint, setVideoBlueprint] = useState<Record<string, unknown> | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoEditorPrompt, setVideoEditorPrompt] = useState('');
   const [videoEditing, setVideoEditing] = useState(false);
@@ -176,6 +180,47 @@ export default function Studio() {
 
   function generatePrompt() {
     setGeneratedPrompt(activePromptType === 'image' ? imagePrompt : videoPrompt);
+  }
+
+  async function generateStudioAsset() {
+    if (!topic.trim()) return;
+    setStudioLoading(true);
+    setStudioError(null);
+    setGeneratedImageUrl(null);
+    setVideoBlueprint(null);
+
+    try {
+      const res = await fetch('/api/studio/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic,
+          preset,
+          tone,
+          language,
+          mode: activePromptType,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStudioError(String(data?.error || 'Studio generation failed.'));
+        return;
+      }
+
+      if (activePromptType === 'image') {
+        setGeneratedImageUrl(typeof data?.imageDataUrl === 'string' ? data.imageDataUrl : null);
+        setGeneratedPrompt(typeof data?.revisedPrompt === 'string' ? data.revisedPrompt : imagePrompt);
+        return;
+      }
+
+      setVideoBlueprint((typeof data?.blueprint === 'object' && data.blueprint !== null) ? data.blueprint as Record<string, unknown> : null);
+      setGeneratedPrompt(videoPrompt);
+    } catch {
+      setStudioError(language === 'pl' ? 'Blad polaczenia ze Studio AI.' : language === 'es' ? 'Error de conexion con Studio AI.' : 'Studio AI connection error.');
+    } finally {
+      setStudioLoading(false);
+    }
   }
 
   async function editVideo() {
@@ -296,7 +341,7 @@ export default function Studio() {
           </div>
 
           <div className="flex items-center gap-8" style={{ gap: 8 }}>
-            <button className="btn btn-primary btn-sm" onClick={generatePrompt}>
+            <button className="btn btn-primary btn-sm" onClick={generateStudioAsset} disabled={studioLoading || !topic.trim()}>
               <Sparkles size={14} /> {copy.generate}
             </button>
             <button className={`btn btn-ghost btn-sm${activePromptType === 'image' ? ' active' : ''}`} onClick={() => setActivePromptType('image')}>
@@ -313,6 +358,40 @@ export default function Studio() {
           <p style={{ color: 'var(--muted)', fontSize: 12, marginBottom: 10 }}>
             {copy.resultText}
           </p>
+          {studioError && (
+            <div className="alert alert-error" style={{ marginBottom: 10 }}>{studioError}</div>
+          )}
+          {studioLoading && (
+            <div className="alert alert-info" style={{ marginBottom: 10 }}>
+              <Sparkles size={14} /> {language === 'pl' ? 'Studio generuje asset premium...' : language === 'es' ? 'Studio esta generando el asset premium...' : 'Studio is generating the premium asset...'}
+            </div>
+          )}
+          {generatedImageUrl && activePromptType === 'image' && (
+            <div style={{ marginBottom: 12 }}>
+              <img src={generatedImageUrl} alt={topic} style={{ width: '100%', borderRadius: 12, border: '1px solid var(--stroke)' }} />
+            </div>
+          )}
+          {videoBlueprint && activePromptType === 'video' && (
+            <div style={{ display: 'grid', gap: 10, marginBottom: 12 }}>
+              {typeof videoBlueprint.headline === 'string' && (
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{videoBlueprint.headline}</div>
+              )}
+              {typeof videoBlueprint.hook === 'string' && (
+                <div className="studio-output">{videoBlueprint.hook}</div>
+              )}
+              {Array.isArray(videoBlueprint.scenes) && (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {(videoBlueprint.scenes as Array<Record<string, unknown>>).map((scene, index) => (
+                    <div key={index} style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,.04)' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{String(scene.title || `Scene ${index + 1}`)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 4 }}>{String(scene.visual || '')}</div>
+                      <div style={{ fontSize: 12 }}>{String(scene.voiceover || '')}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div className="studio-output">{generatedPrompt || copy.emptyPrompt}</div>
         </div>
       </div>
