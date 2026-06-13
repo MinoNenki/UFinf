@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readSettings } from '@/lib/server/settingsStore';
 import { generateStudioImageAsset, generateStudioVideoBlueprint } from '@/lib/server/mediaProvider';
+import { saveStudioHistoryEntry } from '@/lib/server/studioHistoryStore';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,6 +13,7 @@ export async function POST(req: Request) {
   const tone = String(body.tone || '').trim();
   const mode = String(body.mode || 'image');
   const language = String(body.language || 'pl') as 'pl' | 'en' | 'es';
+  const providerMode = String(body.providerMode || 'fallback') as 'fast' | 'fallback' | 'quality_max';
 
   if (!topic) {
     return NextResponse.json({ error: 'Topic is required.' }, { status: 400 });
@@ -29,25 +31,58 @@ export async function POST(req: Request) {
         openaiApiKey: settings.apiKeys.openaiApiKey,
       });
 
+      const historyEntry = await saveStudioHistoryEntry({
+        mode: 'image',
+        topic,
+        preset,
+        tone,
+        language,
+        providerMode,
+        providerUsed: image.providerUsed,
+        generatedPrompt: image.revisedPrompt,
+        revisedPrompt: image.revisedPrompt,
+        imageDataUrl: image.imageDataUrl,
+      });
+
       return NextResponse.json({
         ok: true,
         mode: 'image',
+        providerMode,
         ...image,
+        historyEntry,
       });
     }
 
-    const blueprint = await generateStudioVideoBlueprint({
+    const video = await generateStudioVideoBlueprint({
       topic,
       preset,
       tone,
       language,
       openaiApiKey: settings.apiKeys.openaiApiKey,
+      anthropicApiKey: settings.apiKeys.anthropicApiKey,
+      providerMode,
+    });
+
+    const historyEntry = await saveStudioHistoryEntry({
+      mode: 'video',
+      topic,
+      preset,
+      tone,
+      language,
+      providerMode,
+      providerUsed: video.providerUsed,
+      generatedPrompt: video.blueprint.hook,
+      blueprint: video.blueprint,
     });
 
     return NextResponse.json({
       ok: true,
       mode: 'video',
-      blueprint,
+      providerMode,
+      providerUsed: video.providerUsed,
+      providersTried: video.providersTried,
+      blueprint: video.blueprint,
+      historyEntry,
     });
   } catch (error) {
     return NextResponse.json(

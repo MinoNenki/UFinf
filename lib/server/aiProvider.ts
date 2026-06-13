@@ -100,9 +100,9 @@ function buildPrompt(input: { topic: string; niche: string; platform: string; la
   const languageLabel = input.language === 'pl' ? 'Polish' : input.language === 'es' ? 'Spanish' : 'English';
 
   return [
-    'You are a senior social media strategist for creators.',
+    'You are a principal global growth strategist for creator brands.',
     `Respond only with valid JSON in ${languageLabel}.`,
-    'Generate a realistic multi-platform content pack based on the topic, niche and target platforms.',
+    'Generate a realistic, premium multi-platform content pack based on the topic, niche, and requested platforms.',
     'Do not add markdown, commentary or code fences.',
     'Required JSON schema:',
     JSON.stringify({
@@ -126,9 +126,15 @@ function buildPrompt(input: { topic: string; niche: string; platform: string; la
     `Requested platforms: ${input.platform}`,
     'Rules:',
     '- be concrete and production-ready',
+    '- output must be useful for immediate execution by a content team',
+    '- hooks should be specific, emotionally sharp, and platform-native',
+    '- avoid cliches, bland motivational tone, and generic "value-packed" filler',
+    '- each platform copy must differ in structure and rhythm (no clone text)',
+    '- adapt style to platform mechanics: TikTok fast pattern interrupt, Shorts retention rhythm, Reels emotional storytelling, Facebook clarity, X punchline precision',
+    '- trend field should describe a usable creative angle, not buzzword soup',
     '- no invented performance numbers or claims of having analyzed unavailable data',
     '- coach items must be actionable and realistic',
-    '- include 6-10 hashtags',
+    '- include 8-14 hashtags with mix: broad + niche + intent-based',
     '- include 4-6 next ideas',
     '- include 4-6 coach actions',
   ].join('\n');
