@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Image, Video, Sparkles, Film, Zap, Wand2 } from 'lucide-react';
 import { byLanguage, useI18n } from '@/lib/i18n';
 
@@ -120,20 +120,76 @@ export default function Studio() {
   const [topic, setTopic] = useState(copy.defaultTopic);
   const [preset, setPreset] = useState(copy.presets[0]);
   const [tone, setTone] = useState(copy.defaultTone);
+  const [activePromptType, setActivePromptType] = useState<'image' | 'video'>('image');
+  const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoEditorPrompt, setVideoEditorPrompt] = useState('');
   const [videoEditing, setVideoEditing] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoEditError, setVideoEditError] = useState<string | null>(null);
+  const [videoEditSummary, setVideoEditSummary] = useState<Record<string, unknown> | null>(null);
+  const [editedVideoUrl, setEditedVideoUrl] = useState<string | null>(null);
+  const [activeVideoJobId, setActiveVideoJobId] = useState<string | null>(null);
 
-  const prompt = useMemo(() => {
+  const imagePrompt = useMemo(() => {
     if (!topic.trim()) return copy.emptyPrompt;
     return copy.lines(topic, preset, tone).join(' ');
   }, [copy, preset, tone, topic]);
 
+  const videoPrompt = useMemo(() => {
+    if (!topic.trim()) return copy.emptyPrompt;
+    return [
+      language === 'pl'
+        ? `Stworz scenariusz short video dla tematu: ${topic}.`
+        : language === 'es'
+        ? `Crea un guion de short video sobre: ${topic}.`
+        : `Create a short-form video script about: ${topic}.`,
+      language === 'pl'
+        ? `Format wyjsciowy: ${preset}.`
+        : language === 'es'
+        ? `Formato de salida: ${preset}.`
+        : `Output format: ${preset}.`,
+      language === 'pl'
+        ? `Ton: ${tone}.`
+        : language === 'es'
+        ? `Tono: ${tone}.`
+        : `Tone: ${tone}.`,
+      language === 'pl'
+        ? 'Zawrz: hook 0-3s, glowna teza, 3 kluczowe sceny, CTA na koncu, propozycje ujec i tempo montazu.'
+        : language === 'es'
+        ? 'Incluye: hook 0-3s, tesis principal, 3 escenas clave, CTA final, sugerencias de tomas y ritmo de edicion.'
+        : 'Include: 0-3s hook, core thesis, 3 key scenes, final CTA, shot list suggestions and editing cadence.',
+    ].join(' ');
+  }, [language, preset, tone, topic, copy.emptyPrompt]);
+
+  useEffect(() => {
+    setGeneratedPrompt(activePromptType === 'image' ? imagePrompt : videoPrompt);
+  }, [activePromptType, imagePrompt, videoPrompt]);
+
+  useEffect(() => {
+    return () => {
+      if (editedVideoUrl) {
+        URL.revokeObjectURL(editedVideoUrl);
+      }
+    };
+  }, [editedVideoUrl]);
+
+  function generatePrompt() {
+    setGeneratedPrompt(activePromptType === 'image' ? imagePrompt : videoPrompt);
+  }
+
   async function editVideo() {
     if (!videoFile || !videoEditorPrompt.trim()) return;
     setVideoEditing(true);
+    setVideoProgress(0);
+    setVideoEditError(null);
+    setVideoEditSummary(null);
+    setActiveVideoJobId(null);
+    if (editedVideoUrl) {
+      URL.revokeObjectURL(editedVideoUrl);
+      setEditedVideoUrl(null);
+    }
     
-    // Symulacja edycji - w produkcji byłoby połączenie z FFmpeg/API video editing
     const formData = new FormData();
     formData.append('video', videoFile);
     formData.append('instruction', videoEditorPrompt);
@@ -144,15 +200,66 @@ export default function Studio() {
         method: 'POST',
         body: formData,
       });
-      
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        // Wynik byłby wyświetlony w video playerze
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        setVideoEditError(String(errData?.error || 'Video processing failed.'));
+        return;
       }
+      const data = await res.json().catch(() => ({}));
+      const jobId = typeof data?.id === 'string' ? data.id : typeof data?.jobId === 'string' ? data.jobId : null;
+      if (!jobId) {
+        setVideoEditError(language === 'pl' ? 'Brak ID zadania video.' : language === 'es' ? 'Falta ID de tarea de video.' : 'Missing video job ID.');
+        return;
+      }
+
+      setActiveVideoJobId(jobId);
+      setVideoEditSummary(data || {});
+
+      for (let attempt = 0; attempt < 120; attempt += 1) {
+        const pollRes = await fetch(`/api/video/jobs/${jobId}`, { cache: 'no-store' });
+        const pollData = await pollRes.json().catch(() => ({}));
+        if (!pollRes.ok) {
+          setVideoEditError(String(pollData?.error || 'Polling failed.'));
+          return;
+        }
+
+        setVideoEditSummary(pollData || {});
+        const progressValue = Number(pollData?.progress);
+        if (Number.isFinite(progressValue)) {
+          setVideoProgress(Math.max(0, Math.min(100, progressValue)));
+        }
+
+        const status = String(pollData?.status || '');
+        if (status === 'failed') {
+          setVideoEditError(String(pollData?.error || pollData?.message || 'Video processing failed.'));
+          return;
+        }
+
+        if (status === 'done') {
+          const resultRes = await fetch(`/api/video/jobs/${jobId}/result`, { cache: 'no-store' });
+          if (!resultRes.ok) {
+            const err = await resultRes.json().catch(() => ({}));
+            setVideoEditError(String(err?.error || 'Rendered file is unavailable.'));
+            return;
+          }
+
+          const blob = await resultRes.blob();
+          const url = URL.createObjectURL(blob);
+          setEditedVideoUrl(url);
+          setVideoProgress(100);
+          return;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+
+      setVideoEditError(language === 'pl' ? 'Przekroczono czas oczekiwania na wynik video.' : language === 'es' ? 'Tiempo de espera agotado para el resultado de video.' : 'Timed out waiting for video result.');
     } catch (error) {
       console.error('Video editing error:', error);
+      setVideoEditError(language === 'pl' ? 'Blad polaczenia z silnikiem video.' : language === 'es' ? 'Error de conexion con el motor de video.' : 'Video engine connection error.');
     } finally {
+      setVideoProgress((prev) => (prev < 100 ? 0 : prev));
       setVideoEditing(false);
     }
   }
@@ -189,13 +296,13 @@ export default function Studio() {
           </div>
 
           <div className="flex items-center gap-8" style={{ gap: 8 }}>
-            <button className="btn btn-primary btn-sm">
+            <button className="btn btn-primary btn-sm" onClick={generatePrompt}>
               <Sparkles size={14} /> {copy.generate}
             </button>
-            <button className="btn btn-ghost btn-sm">
+            <button className={`btn btn-ghost btn-sm${activePromptType === 'image' ? ' active' : ''}`} onClick={() => setActivePromptType('image')}>
               <Image size={14} /> {copy.image}
             </button>
-            <button className="btn btn-ghost btn-sm">
+            <button className={`btn btn-ghost btn-sm${activePromptType === 'video' ? ' active' : ''}`} onClick={() => setActivePromptType('video')}>
               <Video size={14} /> {copy.video}
             </button>
           </div>
@@ -206,7 +313,7 @@ export default function Studio() {
           <p style={{ color: 'var(--muted)', fontSize: 12, marginBottom: 10 }}>
             {copy.resultText}
           </p>
-          <div className="studio-output">{prompt}</div>
+          <div className="studio-output">{generatedPrompt || copy.emptyPrompt}</div>
         </div>
       </div>
 
@@ -284,6 +391,71 @@ export default function Studio() {
               <Wand2 size={14} />
               {videoEditing ? (language === 'pl' ? 'Edytuję...' : language === 'es' ? 'Editando...' : 'Editing...') : copy.editorGenerate}
             </button>
+
+            {videoEditing && (
+              <div style={{ marginTop: 10 }}>
+                <div style={{
+                  height: 8,
+                  borderRadius: 999,
+                  background: 'rgba(255,255,255,.08)',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    width: `${videoProgress}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, var(--cyan), #58f3c3)',
+                    transition: 'width .3s ease',
+                  }} />
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
+                  {language === 'pl' ? `Przetwarzanie: ${videoProgress}%` : language === 'es' ? `Procesando: ${videoProgress}%` : `Processing: ${videoProgress}%`}
+                </div>
+                {activeVideoJobId && (
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+                    Job ID: {activeVideoJobId}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {videoEditError && (
+              <div className="alert alert-error" style={{ marginTop: 12 }}>
+                {videoEditError}
+              </div>
+            )}
+
+            {videoEditSummary && (
+              <div className="card" style={{ marginTop: 12, background: 'rgba(255,255,255,.03)' }}>
+                {(() => {
+                  const summaryStatus = typeof videoEditSummary.status === 'string'
+                    ? videoEditSummary.status
+                    : (language === 'pl' ? 'Status zadania' : language === 'es' ? 'Estado de tarea' : 'Job status');
+                  const summaryMessage = typeof videoEditSummary.message === 'string'
+                    ? videoEditSummary.message
+                    : '';
+
+                  return (
+                    <>
+                <h4 style={{ fontSize: 14, marginBottom: 8 }}>
+                  {summaryStatus}
+                </h4>
+                {summaryMessage && (
+                  <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 8 }}>{summaryMessage}</p>
+                )}
+                {Array.isArray(videoEditSummary.editingOperations) && (
+                  <div style={{ display: 'grid', gap: 6 }}>
+                    {(videoEditSummary.editingOperations as Array<Record<string, unknown>>).map((op, idx) => (
+                      <div key={idx} style={{ fontSize: 12, padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,.04)' }}>
+                        <strong>{String(op.operation || 'step')}</strong>: {String(op.description || '')}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
           </div>
 
           <div style={{
@@ -304,6 +476,11 @@ export default function Studio() {
                 <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 12 }}>
                   {(videoFile.size / (1024 * 1024)).toFixed(1)} MB
                 </div>
+                {editedVideoUrl && (
+                  <div style={{ width: '100%', marginTop: 12 }}>
+                    <video controls src={editedVideoUrl} style={{ width: '100%', borderRadius: 8 }} />
+                  </div>
+                )}
               </>
             ) : (
               <>

@@ -11,8 +11,10 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const plan = (body.plan || 'free') as PlanKey;
   const topic = String(body.topic || '');
+  const attachmentContext = String(body.attachmentContext || '');
+  const generationTopic = [topic.trim(), attachmentContext.trim()].filter(Boolean).join('\n\n');
   const settings = await readSettings();
-  const guard = budgetGuard(plan, topic.length + String(body.niche || '').length + 500, settings.antiLoss);
+  const guard = budgetGuard(plan, generationTopic.length + String(body.niche || '').length + 500, settings.antiLoss);
 
   if (!guard.allowed) {
     return NextResponse.json({ error: guard.message, guard }, { status: 402 });
@@ -32,7 +34,7 @@ export async function POST(req: Request) {
   let result;
   try {
     result = await generateGrowthPackFromProvider({
-      topic,
+      topic: generationTopic,
       platform: String(body.platform || 'all'),
       niche: String(body.niche || 'creator economy'),
       language,

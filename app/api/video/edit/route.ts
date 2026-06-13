@@ -1,111 +1,111 @@
 import { NextResponse } from 'next/server';
+import { createVideoJob } from '@/lib/server/videoJobStore';
 
-/**
- * AI Video Editing Endpoint
- * 
- * PRODUCTION INTEGRATION:
- * This endpoint is designed to be integrated with:
- * - FFmpeg server (video processing)
- * - CloudConvert API (video conversion)
- * - Runway ML (AI video editing)
- * - Synthesia (automated video generation)
- * 
- * CURRENT: Returns mock response with editing plan
- * TODO: Integrate actual video processing library
- */
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+function inferOperations(instruction: string) {
+  const lower = instruction.toLowerCase();
+  const ops: Array<{ operation: string; description: string; status: 'queued' }> = [
+    {
+      operation: 'parseInstruction',
+      description: 'AI parses the user instruction into concrete editing steps.',
+      status: 'queued',
+    },
+    {
+      operation: 'detectScenes',
+      description: 'Scene and timestamp detection for dynamic short-form pacing.',
+      status: 'queued',
+    },
+  ];
+
+  if (lower.includes('napis') || lower.includes('subtitle') || lower.includes('caption')) {
+    ops.push({
+      operation: 'addSubtitles',
+      description: 'Generate and burn subtitles with readability-optimized style.',
+      status: 'queued',
+    });
+  }
+
+  if (lower.includes('tempo') || lower.includes('speed') || lower.includes('1.5x') || lower.includes('2x')) {
+    ops.push({
+      operation: 'tempoAdjust',
+      description: 'Apply playback speed/tempo optimization for retention.',
+      status: 'queued',
+    });
+  }
+
+  if (lower.includes('wytn') || lower.includes('trim') || lower.includes('cut')) {
+    ops.push({
+      operation: 'smartTrim',
+      description: 'Trim low-value sections and preserve high-attention segments.',
+      status: 'queued',
+    });
+  }
+
+  if (lower.includes('muzyk') || lower.includes('music') || lower.includes('audio')) {
+    ops.push({
+      operation: 'audioProcessing',
+      description: 'Music replacement and loudness normalization.',
+      status: 'queued',
+    });
+  }
+
+  ops.push({
+    operation: 'export',
+    description: 'Export MP4 profile optimized for TikTok/Reels/Shorts.',
+    status: 'queued',
+  });
+
+  return ops;
+}
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const videoFile = formData.get('video') as File;
     const instruction = formData.get('instruction') as string;
-    const language = formData.get('language') as string || 'pl';
+    const language = (formData.get('language') as string) || 'pl';
 
     if (!videoFile) {
-      return NextResponse.json(
-        { error: 'No video file provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
     }
 
     if (!instruction) {
+      return NextResponse.json({ error: 'No editing instruction provided' }, { status: 400 });
+    }
+
+    if (!videoFile.type.startsWith('video/')) {
       return NextResponse.json(
-        { error: 'No editing instruction provided' },
-        { status: 400 }
+        { error: 'Unsupported file type. Upload MP4 or WebM video.' },
+        { status: 415 }
       );
     }
 
-    // MOCK RESPONSE - Replace with actual FFmpeg/video service integration
-    const mockEditingPlan = {
-      language,
-      originalFileName: videoFile.name,
-      fileSizeBytes: videoFile.size,
+    if (videoFile.size > 150 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: 'Video too large. Maximum size is 150MB per request.' },
+        { status: 413 }
+      );
+    }
+
+    const job = await createVideoJob({
+      file: videoFile,
       instruction,
-      estimatedProcessingTime: '2-5 minutes',
-      editingOperations: [
-        {
-          operation: 'parseInstruction',
-          description: 'AI parses user instruction into video editing commands',
-          status: 'queued'
-        },
-        {
-          operation: 'detectScenes',
-          description: 'Analyzes video for scene detection and timestamps',
-          status: 'queued'
-        },
-        {
-          operation: 'applyTransforms',
-          description: 'Applies speed changes, cuts, and effects',
-          status: 'queued'
-        },
-        {
-          operation: 'addSubtitles',
-          description: 'Generates and adds auto-generated subtitles (if requested)',
-          status: 'queued'
-        },
-        {
-          operation: 'audioProcessing',
-          description: 'Applies audio effects and music sync',
-          status: 'queued'
-        },
-        {
-          operation: 'export',
-          description: 'Exports final video in optimized format (MP4, 720p+)',
-          status: 'queued'
-        }
-      ],
-      supportedOperations: [
-        'Speed up/down video (0.5x - 2.0x)',
-        'Trim/cut specific parts',
-        'Add subtitles/captions',
-        'Apply transitions',
-        'Add background music',
-        'Color correction/grading',
-        'Auto-generated zoom for engagement',
-        'Scene detection and jump cuts',
-        'AI-powered B-roll enhancement'
-      ],
-      message: language === 'pl' 
-        ? `Edycja wideo ${videoFile.name} została dodana do kolejki. Zajmie to 2-5 minut. Instrukcja: "${instruction}"`
-        : language === 'es'
-        ? `La edición de video ${videoFile.name} se ha añadido a la cola. Tomará 2-5 minutos. Instrucción: "${instruction}"`
-        : `Video editing for ${videoFile.name} has been queued. This will take 2-5 minutes. Instruction: "${instruction}"`
-    };
+      language,
+    });
 
-    // TODO: When implementing real video processing:
-    // 1. Use FormData to send to FFmpeg server
-    // 2. Store video in temporary storage (S3, GCS)
-    // 3. Process asynchronously with job queue (Bull, RQ)
-    // 4. Return job ID for polling
-    // 5. Stream processed video back to client
-
-    return NextResponse.json(mockEditingPlan);
-
+    return NextResponse.json({
+      ok: true,
+      ...job,
+      editingOperations: inferOperations(instruction),
+      pollUrl: `/api/video/jobs/${job.id}`,
+      resultUrl: `/api/video/jobs/${job.id}/result`,
+      nextPollInSec: 2,
+      status: 'queued',
+    });
   } catch (error) {
     console.error('Video editing error:', error);
-    return NextResponse.json(
-      { error: 'Video processing failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Video processing failed' }, { status: 500 });
   }
 }

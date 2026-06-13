@@ -3,6 +3,10 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
+  outputFileTracingIncludes: {
+    '/api/video/edit': ['./node_modules/ffmpeg-static/**'],
+    '/api/video/jobs/[jobId]': ['./node_modules/ffmpeg-static/**'],
+  },
   webpack(config, { dev }) {
     // Avoid flaky filesystem cache errors in local Windows dev sessions.
     if (dev) {

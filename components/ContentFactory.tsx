@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Clapperboard, ShieldCheck, Copy, Check, Loader } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Clapperboard, ShieldCheck, Copy, Check, Loader, Paperclip, X } from 'lucide-react';
+import { buildAttachmentContext } from '@/lib/attachmentContext';
 import { byLanguage, useI18n } from '@/lib/i18n';
 
 const PLATFORMS = [
@@ -30,11 +31,11 @@ export default function ContentFactory() {
   const { language } = useI18n();
   const copy = byLanguage(language, {
     pl: {
-      title: 'Content Factory', subtitle: 'Jeden temat -> premium pakiet tresci gotowy do publikacji globalnej', steps: ['Wpisz temat', 'Sprawdz budzet', 'Odbierz tresci'], config: 'Konfiguracja tresci', topic: 'Temat / link / opis / pomysl na film', placeholder: 'np. Jak zbudowac globalna marke creator-first i zwiekszyc konwersje...', niche: 'Nisza', plan: 'Plan API', platforms: 'Platformy', budget: 'Szacowany koszt', limit: 'OK - w limicie planu', generate: 'Wygeneruj Pakiet Tresci', generating: 'Generuje pakiet...', emptyTitle: 'Wyniki pojawia sie tutaj', emptyText: 'Wpisz temat i kliknij "Wygeneruj Pakiet Tresci"', bestTime: 'Najlepszy czas', coach: 'Growth Coach', ideas: 'Kolejne pomysly', planTitle: 'PLAN DZIALANIA', ideasTitle: 'KOLEJNE POMYSLY', copied: 'Skopiowano', copyBtn: 'Kopiuj', hashtags: 'Hashtagi', error: 'Blad polaczenia z API.' },
+      title: 'Content Factory', subtitle: 'Jeden temat -> premium pakiet tresci gotowy do publikacji globalnej', steps: ['Wpisz temat', 'Sprawdz koszt', 'Odbierz tresci'], config: 'Konfiguracja tresci', topic: 'Temat / link / opis / pomysl na film', placeholder: 'np. Jak zbudowac globalna marke creator-first i zwiekszyc konwersje...', niche: 'Nisza', plan: 'Plan API', platforms: 'Platformy', budget: 'Szacowany koszt', limit: 'Gotowe do wygenerowania', generate: 'Wygeneruj Pakiet Tresci', generating: 'Generuje pakiet...', emptyTitle: 'Wyniki pojawia sie tutaj', emptyText: 'Wpisz temat albo dodaj pliki zrodlowe i kliknij przycisk generowania.', loadingTitle: 'Tworzymy pakiet tresci', loadingText: 'Przygotowujemy wersje pod wybrane platformy. Wyniki pojawia sie automatycznie ponizej.', attachments: 'Pliki zrodlowe', addFiles: 'Dodaj pliki', removeFile: 'Usun plik', bestTime: 'Najlepszy czas', coach: 'Growth Coach', ideas: 'Kolejne pomysly', planTitle: 'PLAN DZIALANIA', ideasTitle: 'KOLEJNE POMYSLY', copied: 'Skopiowano', copyBtn: 'Kopiuj', hashtags: 'Hashtagi', error: 'Blad polaczenia z API.' },
     en: {
-      title: 'Content Factory', subtitle: 'One topic -> premium content package ready for global distribution', steps: ['Enter topic', 'Check budget', 'Collect content'], config: 'Content setup', topic: 'Topic / link / description / video idea', placeholder: 'e.g. How to build a global creator-first brand and increase conversion...', niche: 'Niche', plan: 'API plan', platforms: 'Platforms', budget: 'Estimated cost', limit: 'OK - within plan limit', generate: 'Generate Content Pack', generating: 'Generating pack...', emptyTitle: 'Results will appear here', emptyText: 'Enter a topic and click "Generate Content Pack"', bestTime: 'Best time', coach: 'Growth Coach', ideas: 'Next ideas', planTitle: 'ACTION PLAN', ideasTitle: 'NEXT IDEAS', copied: 'Copied', copyBtn: 'Copy', hashtags: 'Hashtags', error: 'API connection error.' },
+      title: 'Content Factory', subtitle: 'One topic -> premium content package ready for global distribution', steps: ['Enter topic', 'Check cost', 'Collect content'], config: 'Content setup', topic: 'Topic / link / description / video idea', placeholder: 'e.g. How to build a global creator-first brand and increase conversion...', niche: 'Niche', plan: 'API plan', platforms: 'Platforms', budget: 'Estimated cost', limit: 'Ready to generate', generate: 'Generate Content Pack', generating: 'Generating pack...', emptyTitle: 'Results will appear here', emptyText: 'Enter a topic or add source files and start generation.', loadingTitle: 'Building your content pack', loadingText: 'We are generating versions for the selected platforms. Results will appear below automatically.', attachments: 'Source files', addFiles: 'Add files', removeFile: 'Remove file', bestTime: 'Best time', coach: 'Growth Coach', ideas: 'Next ideas', planTitle: 'ACTION PLAN', ideasTitle: 'NEXT IDEAS', copied: 'Copied', copyBtn: 'Copy', hashtags: 'Hashtags', error: 'API connection error.' },
     es: {
-      title: 'Fabrica de contenido', subtitle: 'Un tema -> paquete premium listo para distribucion global', steps: ['Introduce tema', 'Revisa presupuesto', 'Recoge contenido'], config: 'Configuracion de contenido', topic: 'Tema / link / descripcion / idea de video', placeholder: 'ej. Como construir una marca global creator-first y aumentar conversion...', niche: 'Nicho', plan: 'Plan API', platforms: 'Plataformas', budget: 'Coste estimado', limit: 'OK - dentro del limite del plan', generate: 'Generar paquete de contenido', generating: 'Generando paquete...', emptyTitle: 'Los resultados apareceran aqui', emptyText: 'Introduce un tema y haz clic en "Generar paquete de contenido"', bestTime: 'Mejor hora', coach: 'Growth Coach', ideas: 'Siguientes ideas', planTitle: 'PLAN DE ACCION', ideasTitle: 'SIGUIENTES IDEAS', copied: 'Copiado', copyBtn: 'Copiar', hashtags: 'Hashtags', error: 'Error de conexion con la API.' },
+      title: 'Fabrica de contenido', subtitle: 'Un tema -> paquete premium listo para distribucion global', steps: ['Introduce tema', 'Revisa coste', 'Recoge contenido'], config: 'Configuracion de contenido', topic: 'Tema / link / descripcion / idea de video', placeholder: 'ej. Como construir una marca global creator-first y aumentar conversion...', niche: 'Nicho', plan: 'Plan API', platforms: 'Plataformas', budget: 'Coste estimado', limit: 'Listo para generar', generate: 'Generar paquete de contenido', generating: 'Generando paquete...', emptyTitle: 'Los resultados apareceran aqui', emptyText: 'Introduce un tema o agrega archivos fuente y lanza la generacion.', loadingTitle: 'Creando tu paquete de contenido', loadingText: 'Estamos preparando versiones para las plataformas seleccionadas. Los resultados apareceran abajo automaticamente.', attachments: 'Archivos fuente', addFiles: 'Agregar archivos', removeFile: 'Quitar archivo', bestTime: 'Mejor hora', coach: 'Growth Coach', ideas: 'Siguientes ideas', planTitle: 'PLAN DE ACCION', ideasTitle: 'SIGUIENTES IDEAS', copied: 'Copiado', copyBtn: 'Copiar', hashtags: 'Hashtags', error: 'Error de conexion con la API.' },
   });
   const [step, setStep] = useState(1);
   const [topic, setTopic] = useState('');
@@ -45,9 +46,17 @@ export default function ContentFactory() {
   const [result, setResult] = useState<ContentResult | null>(null);
   const [activeTab, setActiveTab] = useState('tiktok');
   const [copied, setCopied] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const resultRef = useRef<HTMLDivElement | null>(null);
 
   const inputLength = topic.length + niche.length + 500;
   const estimatedCost = useMemo(() => Math.max(0.001, (inputLength / 4 / 1000) * 0.00015 + 0.0006).toFixed(4), [inputLength]);
+
+  useEffect(() => {
+    if ((loading || result) && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [loading, result]);
 
   function togglePlatform(id: string) {
     setSelectedPlatforms(prev =>
@@ -56,14 +65,16 @@ export default function ContentFactory() {
   }
 
   async function generate() {
-    if (!topic.trim()) return;
+    if (!topic.trim() && attachments.length === 0) return;
     setLoading(true);
     setResult(null);
+    setStep(2);
     try {
+      const attachmentContext = await buildAttachmentContext(attachments);
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, niche, plan, platform: selectedPlatforms.join(','), language }),
+        body: JSON.stringify({ topic, niche, plan, platform: selectedPlatforms.join(','), language, attachmentContext }),
       });
       const raw = await res.text();
       const data = raw ? JSON.parse(raw) : {};
@@ -81,6 +92,24 @@ export default function ContentFactory() {
       setResult({ error: copy.error });
     }
     setLoading(false);
+  }
+
+  function addFiles(list: FileList | null) {
+    if (!list?.length) return;
+    setAttachments((prev) => {
+      const incoming = Array.from(list);
+      const merged = [...prev];
+      for (const file of incoming) {
+        if (!merged.some((item) => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) {
+          merged.push(file);
+        }
+      }
+      return merged;
+    });
+  }
+
+  function removeFile(index: number) {
+    setAttachments((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
   }
 
   function copyText(text: string, key: string) {
@@ -139,6 +168,36 @@ export default function ContentFactory() {
           </div>
 
           <div className="form-group">
+            <label className="form-label">{copy.attachments}</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <label className="btn btn-ghost btn-sm" style={{ width: 'fit-content' }}>
+                <Paperclip size={14} /> {copy.addFiles}
+                <input
+                  type="file"
+                  multiple
+                  onChange={(event) => addFiles(event.target.files)}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              {attachments.length > 0 && (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {attachments.map((file, index) => (
+                    <div key={`${file.name}-${file.lastModified}-${file.size}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,.04)' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{file.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--muted)' }}>{file.type || 'file'} • {(file.size / 1024).toFixed(file.size >= 1024 * 1024 ? 0 : 1)} KB</div>
+                      </div>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => removeFile(index)} aria-label={copy.removeFile}>
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="form-group">
             <label className="form-label">{copy.niche}</label>
             <select value={niche} onChange={e => setNiche(e.target.value)}>
               {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
@@ -171,7 +230,7 @@ export default function ContentFactory() {
           <div className="budget-guard" onClick={() => step === 1 && setStep(2)} style={{ cursor: 'pointer' }}>
             <ShieldCheck size={16} />
             <div>
-              <strong>Budget Guard</strong>: {copy.budget} <strong>${estimatedCost}</strong>
+              <strong>{copy.budget}</strong>: <strong>${estimatedCost}</strong>
               {step >= 2 && <span style={{ color: 'var(--green)', marginLeft: 8 }}>✓ {copy.limit}</span>}
             </div>
           </div>
@@ -179,7 +238,7 @@ export default function ContentFactory() {
           <button
             className="btn btn-primary btn-full"
             onClick={generate}
-            disabled={loading || !topic.trim() || selectedPlatforms.length === 0}
+            disabled={loading || (!topic.trim() && attachments.length === 0) || selectedPlatforms.length === 0}
             style={{ marginTop: 12 }}
           >
             {loading ? (
@@ -197,8 +256,16 @@ export default function ContentFactory() {
         </div>
 
         {/* Right: Results */}
-        <div className="card">
-          {!result?.result && (
+        <div className="card" ref={resultRef}>
+          {loading && (
+            <div style={{ minHeight: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12 }}>
+              <Loader size={32} style={{ animation: 'spin .7s linear infinite', color: 'var(--cyan)' }} />
+              <h3 style={{ fontSize: 17 }}>{copy.loadingTitle}</h3>
+              <p style={{ color: 'var(--muted)', fontSize: 13 }}>{copy.loadingText}</p>
+            </div>
+          )}
+
+          {!loading && !result?.result && (
             <div style={{ minHeight: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12 }}>
               <Clapperboard size={44} color="rgba(255,255,255,.15)" />
               <h3 style={{ fontSize: 17 }}>{copy.emptyTitle}</h3>
@@ -206,7 +273,7 @@ export default function ContentFactory() {
             </div>
           )}
 
-          {result?.result && (
+          {!loading && result?.result && (
             <div className="animate-in">
               {/* Score */}
               <div className="result-top" style={{ marginBottom: 16 }}>

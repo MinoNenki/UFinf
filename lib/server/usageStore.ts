@@ -30,7 +30,9 @@ type SubscriptionEntitlement = {
   updatedAt: string;
 };
 
-const USAGE_FILE = path.join(process.cwd(), '.runtime', 'usage-state.json');
+const LEGACY_USAGE_FILE = path.join(process.cwd(), '.runtime', 'usage-state.json');
+const RUNTIME_DIR = process.env.VERCEL ? path.join('/tmp', 'ufinf-runtime') : path.join(process.cwd(), '.runtime');
+const USAGE_FILE = path.join(RUNTIME_DIR, 'usage-state.json');
 
 let memoryUsageState: UsageState | null = null;
 
@@ -95,6 +97,40 @@ async function readUsage(): Promise<UsageState> {
     }
     return merged;
   } catch {
+    // On first boot in serverless, seed from legacy bundled runtime file when writable file does not exist yet.
+    try {
+      const legacyRaw = await readFile(LEGACY_USAGE_FILE, 'utf8');
+      const legacyParsed = JSON.parse(legacyRaw) as Partial<UsageState>;
+      const base = defaultUsage();
+      const seeded: UsageState = {
+        ...base,
+        ...legacyParsed,
+        counts: {
+          ...base.counts,
+          ...(legacyParsed.counts || {}),
+        },
+        topUpPurchases: Array.isArray(legacyParsed.topUpPurchases) ? legacyParsed.topUpPurchases : [],
+        topUpGenerationsRemaining: Number.isFinite(Number(legacyParsed.topUpGenerationsRemaining))
+          ? Number(legacyParsed.topUpGenerationsRemaining)
+          : 0,
+        fulfilledStripeSessions: Array.isArray(legacyParsed.fulfilledStripeSessions) ? legacyParsed.fulfilledStripeSessions : [],
+        subscriptionEntitlements: typeof legacyParsed.subscriptionEntitlements === 'object' && legacyParsed.subscriptionEntitlements !== null
+          ? legacyParsed.subscriptionEntitlements as UsageState['subscriptionEntitlements']
+          : {},
+      };
+      return seeded.dayKey === todayKey()
+        ? seeded
+        : {
+            ...base,
+            topUpGenerationsRemaining: seeded.topUpGenerationsRemaining,
+            topUpPurchases: seeded.topUpPurchases,
+            fulfilledStripeSessions: seeded.fulfilledStripeSessions,
+            subscriptionEntitlements: seeded.subscriptionEntitlements,
+          };
+    } catch {
+      // Continue to in-memory fallback below.
+    }
+
     if (memoryUsageState) {
       return memoryUsageState.dayKey === todayKey()
         ? memoryUsageState

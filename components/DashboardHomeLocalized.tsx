@@ -13,30 +13,30 @@ export default function DashboardHomeLocalized() {
   const copy = byLanguage(language, {
     pl: {
       title: 'Stan konta i systemu',
-      subtitle: 'Ten dashboard pokazuje tylko dane potwierdzone przez system. Brak fikcyjnych statystyk i demo liczb.',
-      cards: ['Zalogowany uzytkownik', 'Tryb logowania', 'Jednorazowe generacje', 'Analityka platform'],
+      subtitle: 'Najwazniejsze informacje o Twoim koncie, generacjach i kolejnych krokach.',
+      cards: ['Zalogowany uzytkownik', 'Status konta', 'Jednorazowe generacje', 'Analityka platform'],
       emptyMetrics: 'Brak realnych danych. Podlacz platformy i wykonaj pierwsze publikacje, aby zobaczyc wyniki.',
       account: 'Moje konto',
       generate: 'Przejdz do generowania',
       coach: 'Kolejne kroki',
       coachItems: [
-        'Uzupelnij klucze AI i integracje platform w panelu administratora.',
-        'Wygeneruj pierwsza tresc z prawdziwego tematu, bez danych demo.',
-        'Po publikacji i pierwszych interakcjach dashboard zacznie pokazywac realne liczby.',
+        'Dodaj zrodla materialow, aby tworzyc pakiety pod wszystkie platformy.',
+        'Wygeneruj pierwsza tresc z prawdziwego tematu albo z przeslanych plikow.',
+        'Po publikacji i pierwszych interakcjach zobaczysz pierwsze realne sygnaly wzrostu.',
       ],
       verified: 'Zweryfikowany email',
       yes: 'Tak',
       no: 'Nie',
       topUpFallback: 'Brak aktywnych pakietow jednorazowych',
-      authModes: { supabase: 'Supabase', local: 'Lokalny fallback' },
-      best: 'Najlepsza praktyka na start',
-      bestText: 'Najpierw napraw konfiguracje i przeplywy, potem pokazuj klientowi tylko dane pochodzace z prawdziwych zrodel.',
+      accountStates: { supabase: 'Aktywne konto', local: 'Aktywne konto' },
+      best: 'Na czym skupic sie teraz',
+      bestText: 'Najwieksza wartosc daje teraz regularne generowanie, publikacja i zbieranie pierwszych wynikow z platform.',
     },
     en: {
-      title: 'Account and system status', subtitle: 'This dashboard only shows system-confirmed data. No fake statistics or demo numbers.', cards: ['Logged user', 'Auth mode', 'One-time generations', 'Platform analytics'], emptyMetrics: 'No real data yet. Connect platforms and publish first content to see metrics.', account: 'My account', generate: 'Go to content generation', coach: 'Next steps', coachItems: ['Complete AI keys and platform integrations in the admin panel.', 'Generate your first content from a real topic, with no demo data.', 'After publishing and first interactions, the dashboard will start showing real numbers.'], verified: 'Verified email', yes: 'Yes', no: 'No', topUpFallback: 'No active one-time packs', authModes: { supabase: 'Supabase', local: 'Local fallback' }, best: 'Best first step', bestText: 'Fix configuration and flows first, then show the client only data coming from real sources.'
+      title: 'Account and system status', subtitle: 'Your key account, generation, and progress information in one place.', cards: ['Logged user', 'Account status', 'One-time generations', 'Platform analytics'], emptyMetrics: 'No real data yet. Connect platforms and publish first content to see metrics.', account: 'My account', generate: 'Go to content generation', coach: 'Next steps', coachItems: ['Add source materials to create packs for every platform.', 'Generate your first content from a real topic or uploaded files.', 'After publishing and first interactions, you will see the first real growth signals.'], verified: 'Verified email', yes: 'Yes', no: 'No', topUpFallback: 'No active one-time packs', accountStates: { supabase: 'Active account', local: 'Active account' }, best: 'What to focus on now', bestText: 'Your biggest leverage now is consistent generation, publishing, and collecting the first platform signals.'
     },
     es: {
-      title: 'Estado de la cuenta y del sistema', subtitle: 'Este dashboard solo muestra datos confirmados por el sistema. Sin estadisticas falsas ni numeros demo.', cards: ['Usuario conectado', 'Modo de acceso', 'Generaciones de un solo uso', 'Analitica de plataformas'], emptyMetrics: 'Aun no hay datos reales. Conecta plataformas y publica el primer contenido para ver metricas.', account: 'Mi cuenta', generate: 'Ir a generar contenido', coach: 'Siguientes pasos', coachItems: ['Completa claves AI e integraciones de plataformas en el panel admin.', 'Genera el primer contenido desde un tema real, sin datos demo.', 'Despues de publicar y recibir primeras interacciones, el dashboard mostrara numeros reales.'], verified: 'Correo verificado', yes: 'Si', no: 'No', topUpFallback: 'Sin paquetes de un solo uso activos', authModes: { supabase: 'Supabase', local: 'Fallback local' }, best: 'Mejor primer paso', bestText: 'Primero corrige configuracion y flujos; despues muestra al cliente solo datos de fuentes reales.'
+      title: 'Estado de la cuenta y del sistema', subtitle: 'La informacion clave de tu cuenta, generaciones y progreso en un solo lugar.', cards: ['Usuario conectado', 'Estado de la cuenta', 'Generaciones de un solo uso', 'Analitica de plataformas'], emptyMetrics: 'Aun no hay datos reales. Conecta plataformas y publica el primer contenido para ver metricas.', account: 'Mi cuenta', generate: 'Ir a generar contenido', coach: 'Siguientes pasos', coachItems: ['Agrega materiales fuente para crear paquetes para cada plataforma.', 'Genera tu primer contenido desde un tema real o archivos subidos.', 'Tras publicar y recibir primeras interacciones veras las primeras senales reales de crecimiento.'], verified: 'Correo verificado', yes: 'Si', no: 'No', topUpFallback: 'Sin paquetes de un solo uso activos', accountStates: { supabase: 'Cuenta activa', local: 'Cuenta activa' }, best: 'En que enfocarte ahora', bestText: 'Tu mayor palanca ahora es generar, publicar y recoger las primeras senales reales de las plataformas.'
     },
   });
 
@@ -78,7 +78,8 @@ export default function DashboardHomeLocalized() {
         <div className="grid-2" style={{ gap: 12 }}>
           <div className="stat-card">
             <div className="stat-label">{copy.cards[1]}</div>
-            <div className="stat-value" style={{ fontSize: 22 }}>{copy.authModes[authMode]}</div>
+            <div className="stat-value" style={{ fontSize: 22 }}>{copy.accountStates[authMode]}</div>
+            <div className="stat-change">{copy.verified}: {user?.emailVerified ? copy.yes : copy.no}</div>
           </div>
           <div className="stat-card">
             <div className="stat-label">{copy.cards[2]}</div>
