@@ -3,6 +3,20 @@ import path from 'node:path';
 
 type AiLanguage = 'pl' | 'en' | 'es';
 
+type StrategyContext = {
+  goal: string;
+  styleMode: string;
+  resolvedNiche: string;
+  styleProfile: string;
+  shortVideoTemplate: {
+    hookFormula: string;
+    sceneFlow: string[];
+    ctaFormula: string;
+    visualDirection: string;
+    editCadence: string;
+  };
+};
+
 type GrowthPack = {
   verdict: string;
   score: number;
@@ -96,7 +110,16 @@ function normalizePack(raw: unknown, language: AiLanguage): GrowthPack {
   };
 }
 
-function buildPrompt(input: { topic: string; niche: string; platform: string; language: AiLanguage }) {
+function buildPrompt(input: {
+  topic: string;
+  niche: string;
+  platform: string;
+  language: AiLanguage;
+  campaignGoal?: string;
+  styleMode?: string;
+  styleProfile?: string;
+  strategy?: StrategyContext;
+}) {
   const languageLabel = input.language === 'pl' ? 'Polish' : input.language === 'es' ? 'Spanish' : 'English';
 
   return [
@@ -124,6 +147,10 @@ function buildPrompt(input: { topic: string; niche: string; platform: string; la
     `Topic: ${input.topic}`,
     `Niche: ${input.niche}`,
     `Requested platforms: ${input.platform}`,
+    `Campaign goal: ${input.campaignGoal || 'awareness'}`,
+    `Style mode: ${input.styleMode || 'auto'}`,
+    `Style profile: ${input.styleProfile || 'high-performance premium social'}`,
+    input.strategy ? `Strategy pack: ${JSON.stringify(input.strategy)}` : '',
     'Rules:',
     '- be concrete and production-ready',
     '- output must be useful for immediate execution by a content team',
@@ -137,6 +164,8 @@ function buildPrompt(input: { topic: string; niche: string; platform: string; la
     '- include 8-14 hashtags with mix: broad + niche + intent-based',
     '- include 4-6 next ideas',
     '- include 4-6 coach actions',
+    '- respect the campaign goal and strategy pack with strict alignment',
+    '- short-form copy must follow hookFormula + sceneFlow + ctaFormula logic from strategy pack when provided',
   ].join('\n');
 }
 
@@ -208,6 +237,10 @@ export async function generateGrowthPackFromProvider(input: {
   language: AiLanguage;
   openaiApiKey?: string;
   anthropicApiKey?: string;
+  campaignGoal?: string;
+  styleMode?: string;
+  styleProfile?: string;
+  strategy?: StrategyContext;
 }) {
   const openaiApiKey = resolveApiKey(input.openaiApiKey, 'OPENAI_API_KEY');
   const anthropicApiKey = resolveApiKey(input.anthropicApiKey, 'ANTHROPIC_API_KEY');

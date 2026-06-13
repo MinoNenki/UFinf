@@ -6,6 +6,7 @@ import { readSettings } from '@/lib/server/settingsStore';
 import { reserveUsage } from '@/lib/server/usageStore';
 import { buildOneClickHybridPlan } from '@/lib/server/hybridEngine';
 import { ingestBrainEvents } from '@/lib/server/contentBrainStore';
+import { resolveCampaignStrategy } from '@/lib/server/campaignStrategy';
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
@@ -30,6 +31,17 @@ export async function POST(req: Request) {
   }
 
   const language = String(body.language || 'pl') as 'pl' | 'en' | 'es';
+  const campaignGoal = String(body.campaignGoal || 'awareness');
+  const styleMode = String(body.styleMode || 'auto');
+  const manualStyleHint = String(body.manualStyleHint || '');
+  const strategy = resolveCampaignStrategy({
+    topic: generationTopic,
+    niche: String(body.niche || 'creator economy'),
+    campaignGoal,
+    styleMode,
+    manualStyleHint,
+    language,
+  });
 
   let result;
   try {
@@ -40,6 +52,10 @@ export async function POST(req: Request) {
       language,
       openaiApiKey: settings.apiKeys.openaiApiKey,
       anthropicApiKey: settings.apiKeys.anthropicApiKey,
+      campaignGoal: strategy.goal,
+      styleMode: strategy.styleMode,
+      styleProfile: strategy.styleProfile,
+      strategy,
     });
   } catch (error) {
     return NextResponse.json({
@@ -65,5 +81,6 @@ export async function POST(req: Request) {
     features: settings.features,
     hybridPlan,
     mode: 'real_ai',
+    strategy,
   });
 }
