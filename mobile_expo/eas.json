@@ -18,11 +18,11 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.usinf.com",
-        "EXPO_PUBLIC_WEB_URL": "https://usinf.com",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://YOUR_PROJECT.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY",
-        "EXPO_PUBLIC_GOOGLE_PLAY_URL": "https://play.google.com/store/apps/details?id=com.aigrowthos.mobile",
+        "EXPO_PUBLIC_API_URL": "https://ufinf.com",
+        "EXPO_PUBLIC_WEB_URL": "https://ufinf.com",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://czvyuxmytaahpsclvgtu.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6dnl1eG15dGFhaHBzY2x2Z3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwOTk0NjgsImV4cCI6MjA5NjY3NTQ2OH0.6YyWPCJWWV_Jo9Ub7SuwxAsSswDMNLw76669EAuD_kI",
+        "EXPO_PUBLIC_GOOGLE_PLAY_URL": "https://play.google.com/store/apps/details?id=com.ufinfluencer.mobile",
         "EXPO_PUBLIC_APP_STORE_URL": "https://apps.apple.com"
       }
     }

@@ -4,16 +4,16 @@ import { AlertTriangle, BarChart3, DollarSign, ShieldCheck, Sparkles, Users } fr
 import { byLanguage, useI18n } from '@/lib/i18n';
 
 const KPI = [
-  { label: 'Aktywne workspace', value: '1,284', hint: '+8.4% m/m', icon: Users, color: 'var(--cyan)' },
-  { label: 'MRR', value: '$92,340', hint: '+11.2% m/m', icon: DollarSign, color: 'var(--green)' },
-  { label: 'Zuzycie AI (24h)', value: '$1,248', hint: '72% budzetu', icon: BarChart3, color: 'var(--yellow)' },
-  { label: 'Ryzyko anti-loss', value: 'Niskie', hint: '3 alerty soft-stop', icon: ShieldCheck, color: 'var(--violet)' },
+  { label: 'Aktywne workspace', value: 'Brak danych', hint: 'Dane operacyjne nie sa jeszcze podlaczone', icon: Users, color: 'var(--cyan)' },
+  { label: 'MRR', value: 'Brak danych', hint: 'Brak realnego feedu przychodowego', icon: DollarSign, color: 'var(--green)' },
+  { label: 'Zuzycie AI (24h)', value: 'Brak danych', hint: 'Monitoring kosztow wymaga realnego telemetry feed', icon: BarChart3, color: 'var(--yellow)' },
+  { label: 'Ryzyko anti-loss', value: 'Do weryfikacji', hint: 'Sprawdz logi i limity zamiast wartosci demo', icon: ShieldCheck, color: 'var(--violet)' },
 ];
 
 const ALERTS = [
-  'Workspace #349 zbliza sie do 85% dziennego limitu AI.',
-  'Zwiekszone zuzycie tokenow na modelu premium w regionie EU.',
-  'One Click Publish: 2 nieudane publikacje X API (retry w toku).',
+  'Panel admina nie pokazuje juz zmyslonych alertow systemowych.',
+  'Podlacz realny audit log i monitoring, aby zobaczyc prawdziwe alerty operacyjne.',
+  'Do czasu integracji traktuj ten widok jako panel konfiguracyjny, nie jako zrodlo metryk.',
 ];
 
 type Props = {

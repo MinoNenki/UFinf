@@ -85,7 +85,7 @@ Skopiuj `.env.example` do `.env` i ustaw:
 1. Authentication -> Providers -> Google -> Enable.
 2. Wklej Client ID i Client Secret z Google Cloud OAuth.
 3. Authentication -> URL Configuration -> Redirect URLs:
-	- `aigrowthos://auth/callback`
+	- `ufinfluencer://auth/callback`
 4. Authentication -> Settings -> Site URL:
 	- `https://ufinf.com`
 

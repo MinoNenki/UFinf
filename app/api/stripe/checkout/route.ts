@@ -20,48 +20,106 @@ function resolveCancelUrl(origin: string) {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({}));
-  const kind = body?.kind === 'topup' ? 'topup' : 'subscription';
-  const origin = resolvePublicOrigin(req);
-  const stripe = getStripeClient();
+  try {
+    const body = await req.json().catch(() => ({}));
+    const kind = body?.kind === 'topup' ? 'topup' : 'subscription';
+    const origin = resolvePublicOrigin(req);
+    const stripe = getStripeClient();
 
-  if (kind === 'topup') {
-    const packId = body?.packId;
-    if (!isTopUpPackId(packId)) {
-      return NextResponse.json({ error: 'Nieprawidlowy pakiet dokupienia.' }, { status: 400 });
+    if (kind === 'topup') {
+      const packId = body?.packId;
+      if (!isTopUpPackId(packId)) {
+        return NextResponse.json({ error: 'Nieprawidlowy pakiet dokupienia.' }, { status: 400 });
+      }
+
+      if (!stripe) {
+        return NextResponse.json({ error: 'Stripe nie jest skonfigurowany. Ustaw STRIPE_SECRET_KEY.' }, { status: 503 });
+      }
+
+      const pack = TOP_UP_PACKS[packId];
+      const customerEmail = typeof body?.customerEmail === 'string' ? body.customerEmail.trim().toLowerCase() : '';
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer_email: customerEmail || undefined,
+        client_reference_id: customerEmail || undefined,
+        billing_address_collection: 'auto',
+        allow_promotion_codes: true,
+        success_url: resolveSuccessUrl(origin, 'topup', packId),
+        cancel_url: resolveCancelUrl(origin),
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `USInf ${pack.label}`,
+                description: `${pack.generations} generations one-time top-up - cheaper than monthly Premium Plus over time`,
+              },
+              unit_amount: Math.round(pack.priceUsd * 100),
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: {
+          kind: 'topup',
+          packId,
+          generations: String(pack.generations),
+          customerEmail,
+        },
+      });
+
+      return NextResponse.json({
+        checkoutMode: 'stripe',
+        url: session.url,
+        sessionId: session.id,
+        pack,
+      });
+    }
+
+    const planKey = body?.planKey;
+    if (!isPlanKey(planKey)) {
+      return NextResponse.json({ error: 'Nieprawidlowy plan subskrypcji.' }, { status: 400 });
     }
 
     if (!stripe) {
       return NextResponse.json({ error: 'Stripe nie jest skonfigurowany. Ustaw STRIPE_SECRET_KEY.' }, { status: 503 });
     }
 
-    const pack = TOP_UP_PACKS[packId];
+    const plan = PLANS[planKey];
     const customerEmail = typeof body?.customerEmail === 'string' ? body.customerEmail.trim().toLowerCase() : '';
     const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
+      mode: 'subscription',
       customer_email: customerEmail || undefined,
       client_reference_id: customerEmail || undefined,
       billing_address_collection: 'auto',
       allow_promotion_codes: true,
-      success_url: resolveSuccessUrl(origin, 'topup', packId),
+      subscription_data: {
+        metadata: {
+          planKey,
+          customerEmail,
+        },
+      },
+      success_url: resolveSuccessUrl(origin, 'subscription', planKey),
       cancel_url: resolveCancelUrl(origin),
       line_items: [
         {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `USInf ${pack.label}`,
-              description: `${pack.generations} generations one-time top-up - cheaper than monthly Premium Plus over time`,
+              name: `USInf ${plan.name}`,
+              description: `${plan.dailyGenerations} generations per day - Premium Plus is the best value for recurring usage`,
             },
-            unit_amount: Math.round(pack.priceUsd * 100),
+            recurring: {
+              interval: 'month',
+            },
+            unit_amount: Math.round(plan.priceMonthly * 100),
           },
           quantity: 1,
         },
       ],
       metadata: {
-        kind: 'topup',
-        packId,
-        generations: String(pack.generations),
+        kind: 'subscription',
+        planKey,
+        dailyGenerations: String(plan.dailyGenerations),
         customerEmail,
       },
     });
@@ -70,63 +128,10 @@ export async function POST(req: Request) {
       checkoutMode: 'stripe',
       url: session.url,
       sessionId: session.id,
-      pack,
+      plan,
     });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown Stripe checkout error.';
+    return NextResponse.json({ error: `Stripe checkout failed: ${message}` }, { status: 500 });
   }
-
-  const planKey = body?.planKey;
-  if (!isPlanKey(planKey)) {
-    return NextResponse.json({ error: 'Nieprawidlowy plan subskrypcji.' }, { status: 400 });
-  }
-
-  if (!stripe) {
-    return NextResponse.json({ error: 'Stripe nie jest skonfigurowany. Ustaw STRIPE_SECRET_KEY.' }, { status: 503 });
-  }
-
-  const plan = PLANS[planKey];
-  const customerEmail = typeof body?.customerEmail === 'string' ? body.customerEmail.trim().toLowerCase() : '';
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    customer_email: customerEmail || undefined,
-    client_reference_id: customerEmail || undefined,
-    billing_address_collection: 'auto',
-    allow_promotion_codes: true,
-    subscription_data: {
-      metadata: {
-        planKey,
-        customerEmail,
-      },
-    },
-    success_url: resolveSuccessUrl(origin, 'subscription', planKey),
-    cancel_url: resolveCancelUrl(origin),
-    line_items: [
-      {
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: `USInf ${plan.name}`,
-              description: `${plan.dailyGenerations} generations per day - Premium Plus is the best value for recurring usage`,
-          },
-          recurring: {
-            interval: 'month',
-          },
-          unit_amount: Math.round(plan.priceMonthly * 100),
-        },
-        quantity: 1,
-      },
-    ],
-    metadata: {
-      kind: 'subscription',
-      planKey,
-      dailyGenerations: String(plan.dailyGenerations),
-      customerEmail,
-    },
-  });
-
-  return NextResponse.json({
-    checkoutMode: 'stripe',
-    url: session.url,
-    sessionId: session.id,
-    plan,
-  });
 }

@@ -45,15 +45,49 @@ function getRedirectTo() {
   return `${window.location.origin}/auth/callback`;
 }
 
+async function withRateLimitRetry<T>(
+  fn: () => Promise<T>,
+  operationName: string,
+  maxRetries: number = 3
+): Promise<T> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      const isRateLimitError =
+        error?.message?.includes('email rate limit') ||
+        error?.message?.includes('rate limit') ||
+        error?.status === 429;
+
+      if (!isRateLimitError || attempt === maxRetries - 1) {
+        throw error;
+      }
+
+      // Exponential backoff: 2s, 4s, 8s
+      const delayMs = Math.pow(2, attempt + 1) * 1000;
+      console.log(
+        `[${operationName}] Rate limited. Retrying in ${delayMs / 1000}s... (attempt ${attempt + 1}/${maxRetries - 1})`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw new Error(`${operationName} failed after ${maxRetries} retries`);
+}
+
 function toAuthUser(user: User): AuthUser {
+  const meta = user.user_metadata || {};
+  const displayName =
+    (typeof meta.name === 'string' && meta.name.trim()) ||
+    (typeof meta.display_name === 'string' && meta.display_name.trim()) ||
+    (typeof meta.full_name === 'string' && meta.full_name.trim()) ||
+    (typeof meta.given_name === 'string' && meta.given_name.trim()) ||
+    user.email?.split('@')[0] ||
+    'UFInf User';
   return {
     id: user.id,
     email: user.email || '',
-    displayName:
-      (typeof user.user_metadata?.display_name === 'string' && user.user_metadata.display_name) ||
-      (typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name) ||
-      user.email?.split('@')[0] ||
-      'UFInf User',
+    displayName,
     createdAt: user.created_at ? new Date(user.created_at).getTime() : Date.now(),
     emailVerified: Boolean(user.email_confirmed_at),
     provider: 'supabase',
@@ -206,16 +240,20 @@ export async function signUpWithEmail(email: string, password: string, displayNa
     return registerLocalUser(email, password, displayName);
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email: email.trim().toLowerCase(),
-    password,
-    options: {
-      data: {
-        display_name: displayName.trim(),
-      },
-      emailRedirectTo: getRedirectTo(),
-    },
-  });
+  const { data, error } = await withRateLimitRetry(
+    () =>
+      supabase!.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: {
+            display_name: displayName.trim(),
+          },
+          emailRedirectTo: getRedirectTo(),
+        },
+      }),
+    'SignUp'
+  );
 
   if (error) throw error;
 
@@ -263,10 +301,14 @@ export async function signInWithEmail(email: string, password: string): Promise<
     return loginLocalUser(email, password);
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email.trim().toLowerCase(),
-    password,
-  });
+  const { data, error } = await withRateLimitRetry(
+    () =>
+      supabase!.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      }),
+    'SignIn'
+  );
 
   if (error) throw error;
   if (!data.user) throw new Error('Login failed');

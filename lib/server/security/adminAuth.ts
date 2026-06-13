@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, pbkdf2Sync, timingSafeEqual } from 'node:crypto';
 import { AdminRole, normalizeAdminRole } from '@/lib/server/security/rbac';
 
 type AdminSessionPayload = {
@@ -25,6 +25,35 @@ function fromBase64Url(input: string) {
 
 function sign(data: string) {
   return createHmac('sha256', secret()).update(data).digest('base64url');
+}
+
+function constantTimeEqualString(a: string, b: string) {
+  const left = Buffer.from(a, 'utf8');
+  const right = Buffer.from(b, 'utf8');
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+}
+
+function decodeBase64Flexible(input: string) {
+  try {
+    return Buffer.from(input, 'base64url');
+  } catch {
+    return Buffer.from(input, 'base64');
+  }
+}
+
+function verifyPbkdf2PasswordHash(password: string, hashString: string) {
+  const parts = hashString.split('$');
+  if (parts.length !== 5) return false;
+  const [algorithm, digest, iterationsRaw, salt, expectedHashRaw] = parts;
+  if (algorithm !== 'pbkdf2' || digest !== 'sha256') return false;
+
+  const iterations = Number(iterationsRaw);
+  if (!Number.isInteger(iterations) || iterations < 100_000) return false;
+
+  const expectedHash = decodeBase64Flexible(expectedHashRaw);
+  const derived = pbkdf2Sync(password, salt, iterations, expectedHash.length, 'sha256');
+  return timingSafeEqual(derived, expectedHash);
 }
 
 export function createAdminSessionToken(adminRole: AdminRole) {
@@ -65,9 +94,17 @@ export function cookieName() {
 }
 
 export function adminCredentialsValid(email: string, password: string) {
-  const expectedEmail = process.env.ADMIN_EMAIL || 'admin@usinf.com';
+  const expectedEmail = (process.env.ADMIN_EMAIL || 'admin@usinf.com').trim().toLowerCase();
+  const incomingEmail = email.trim().toLowerCase();
+  if (!constantTimeEqualString(incomingEmail, expectedEmail)) return false;
+
+  const passwordHash = (process.env.ADMIN_PASSWORD_HASH || '').trim();
+  if (passwordHash) {
+    return verifyPbkdf2PasswordHash(password, passwordHash);
+  }
+
   const expectedPassword = process.env.ADMIN_PASSWORD || 'change-me-admin-password';
-  return email === expectedEmail && password === expectedPassword;
+  return constantTimeEqualString(password, expectedPassword);
 }
 
 export function adminRoleFromEnv(): AdminRole {

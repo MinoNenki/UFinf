@@ -28,7 +28,8 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
       heroB: { eyebrow: 'UFInf - AI growth stack dla creator economy', title1: 'One Click Publish + AI Content Brain.', title2: 'Wiekszy przychod. Zero chaosu.', subtitle: 'UFInf analizuje, co dziala u Ciebie, znajduje najlepsze godziny publikacji, podpowiada top tematy i publikuje wszedzie automatycznie. Efekt: wiecej wyswietlen i szybszy wzrost.', main: 'Uruchom strategia wzrostu', alt: 'Dowiedz sie wiecej' },
       score: 'Growth Score', publishWindow: 'Publikuj dzis 18:00-20:00', sectionLabels: ['System produktu', 'Live MVP', 'Anti-loss', 'Monetyzacja'],
       enterprise: ['Gotowe na App Store i Google Play', 'One Click Publish orchestration', 'AI Content Brain insights engine', 'Anti-loss control layer', 'Multi-workspace dla agencji'],
-      stats: ['Tworcow aktywnych', 'Generacji tresci', 'Sredni wzrost kanalu', 'Zaoszczedzone godziny'],
+      stats: ['Status produktu', 'Tryb generowania', 'Zakres platform', 'Cel wdrozenia'],
+      statValues: ['MVP beta', 'AI + anti-loss', 'TikTok / YouTube / IG / FB / X', 'Realne dane, zero demo liczb'],
       featuresTitle: 'Komplet funkcji klasy premium dla tworcow i zespolow',
       features: [
         ['AI Content Factory', 'Jeden film, link albo pomysl -> komplet tresci na TikTok, Shorts, Reels, Facebook i X.'],
@@ -51,7 +52,8 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
       heroB: { eyebrow: 'UFInf — AI for creators who want to dominate', title1: 'One Click Publish + AI Content Brain.', title2: 'Bigger income. Zero chaos.', subtitle: 'UFInf analyzes what works for you, finds your prime posting times, suggests your best-performing topics, and publishes everywhere automatically. Result: 70% more views, 3x faster growth.', main: 'Start your growth strategy now', alt: 'Learn more' },
       score: 'Growth Score', publishWindow: 'Publish today 6:00 PM-8:00 PM', sectionLabels: ['Product system', 'Live MVP', 'Anti-loss', 'Monetization'],
       enterprise: ['Ready for App Store and Google Play', 'One Click Publish orchestration', 'AI Content Brain insights engine', 'Anti-loss control layer', 'Multi-workspace for agencies'],
-      stats: ['Creators using it', 'Content generations', 'Average channel growth', 'Hours saved'],
+      stats: ['Product status', 'Generation mode', 'Platform coverage', 'Deployment goal'],
+      statValues: ['MVP beta', 'AI + anti-loss', 'TikTok / YouTube / IG / FB / X', 'Real data, no invented metrics'],
       featuresTitle: 'Complete premium feature stack for creators and teams',
       features: [
         ['AI Content Factory', 'One video, link, or idea -> complete content pack for TikTok, Shorts, Reels, Facebook, and X.'],
@@ -74,7 +76,8 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
       heroB: { eyebrow: 'UFInf — AI para creadores ambiciosos', title1: 'One Click Publish + AI Content Brain.', title2: 'Mayores ingresos. Cero caos.', subtitle: 'UFInf analiza que funciona para ti, encuentra tus mejores horarios, sugiere tus temas top y publica automaticamente en todo. Resultado: +70% vistas, crecimiento 3x mas rapido.', main: 'Inicia tu estrategia de crecimiento', alt: 'Saber mas' },
       score: 'Growth Score', publishWindow: 'Publica hoy 18:00-20:00', sectionLabels: ['Sistema del producto', 'Live MVP', 'Anti-loss', 'Monetizacion'],
       enterprise: ['Listo para App Store y Google Play', 'One Click Publish orchestration', 'AI Content Brain insights engine', 'Anti-loss control layer', 'Multi-workspace para agencias'],
-      stats: ['Creadores activos', 'Generaciones de contenido', 'Crecimiento medio del canal', 'Horas ahorradas'],
+      stats: ['Estado del producto', 'Modo de generacion', 'Cobertura de plataformas', 'Objetivo de despliegue'],
+      statValues: ['MVP beta', 'AI + anti-loss', 'TikTok / YouTube / IG / FB / X', 'Datos reales, sin metricas inventadas'],
       featuresTitle: 'Suite premium completa para creadores y equipos',
       features: [
         ['AI Content Factory', 'Un video, link o idea -> paquete completo de contenido para TikTok, Shorts, Reels, Facebook y X.'],
@@ -191,12 +194,12 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
           <div className="cta-row"><a href="/dashboard" className="btn btn-primary btn-lg btn-pulse-attention">{hero.main} <ArrowRight size={18} /></a><a href="#pricing" className="btn btn-ghost btn-lg navlink-hot">{hero.alt}</a></div>
           <div className="platforms-row">{PLATFORMS.map((platform) => <span key={platform.name} className={`badge ${platform.cls}`}>{platform.name}</span>)}</div>
         </div>
-        <div className="hero-card"><div className="phone-mock"><div className="phone-notch" /><div className="phone-score-ring"><b>87</b><small>{copy.score}</small></div><div className="phone-coach-tip"><CalendarClock size={15} /> {copy.publishWindow}</div><div className="phone-mini-grid"><div className="phone-mini-card"><b>128K</b>Views</div><div className="phone-mini-card"><b>+12%</b>Growth</div><div className="phone-mini-card"><b>🔥 PoE2</b>Trend +120%</div><div className="phone-mini-card"><b>3</b>Inbox</div></div><button className="phone-publish-btn">✨ Publish Everywhere</button></div></div>
+        <div className="hero-card"><div className="phone-mock"><div className="phone-notch" /><div className="phone-score-ring"><b>MVP</b><small>{copy.score}</small></div><div className="phone-coach-tip"><CalendarClock size={15} /> {copy.publishWindow}</div><div className="phone-mini-grid"><div className="phone-mini-card"><b>AI</b>Factory</div><div className="phone-mini-card"><b>Guard</b>Active</div><div className="phone-mini-card"><b>Real</b>Data only</div><div className="phone-mini-card"><b>Sync</b>Platforms</div></div><button className="phone-publish-btn">✨ Publish Everywhere</button></div></div>
       </section>
 
       <section className="section" style={{ paddingTop: 10 }}><div className="enterprise-strip"><span>A/B variant: {variant.toUpperCase()}</span>{copy.enterprise.map((item) => <span key={item}>{item}</span>)}</div></section>
 
-      <div style={{ maxWidth: 1480, margin: '0 auto', padding: '0 5vw 40px' }}><div className="grid-4">{[{ label: copy.stats[0], value: '2,400+', icon: Users }, { label: copy.stats[1], value: '180K+', icon: Clapperboard }, { label: copy.stats[2], value: '+34%', icon: TrendingUp }, { label: copy.stats[3], value: '12h/week', icon: BarChart3 }].map(({ label, value, icon: Icon }) => <div key={label} className="card card-sm" style={{ textAlign: 'center' }}><Icon size={20} color="var(--cyan)" style={{ margin: '0 auto 8px' }} /><div style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-.04em' }}>{value}</div><div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{label}</div></div>)}</div></div>
+      <div style={{ maxWidth: 1480, margin: '0 auto', padding: '0 5vw 40px' }}><div className="grid-4">{[{ label: copy.stats[0], value: copy.statValues[0], icon: Users }, { label: copy.stats[1], value: copy.statValues[1], icon: Clapperboard }, { label: copy.stats[2], value: copy.statValues[2], icon: TrendingUp }, { label: copy.stats[3], value: copy.statValues[3], icon: BarChart3 }].map(({ label, value, icon: Icon }) => <div key={label} className="card card-sm" style={{ textAlign: 'center' }}><Icon size={20} color="var(--cyan)" style={{ margin: '0 auto 8px' }} /><div style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-.04em' }}>{value}</div><div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>{label}</div></div>)}</div></div>
 
       <section className="section" id="factory"><div className="section-header"><p className="section-label">{copy.sectionLabels[0]}</p><h2>{copy.featuresTitle}</h2></div><div className="feature-grid">{copy.features.map(([title, text], index) => { const Icon = featureIcons[index]; return <article className="feature-card" key={title}><div className="feature-icon"><Icon size={28} color={['var(--cyan)', 'var(--violet)', 'var(--pink)', 'var(--green)', 'var(--orange)', 'var(--yellow)', 'var(--violet)'][index]} /></div><h3>{title}</h3><p>{text}</p></article>; })}</div></section>
 

@@ -29,7 +29,12 @@ export default function LoginPage() {
       await signIn(email, password);
       router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const message = err instanceof Error ? err.message : 'Login failed';
+      if (message.toLowerCase().includes('rate limit')) {
+        setError('Zbyt wiele prób logowania. System automatycznie ponawiał próby, ale limit się wyczerpał. Czekaj 5 minut i spróbuj ponownie.');
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }

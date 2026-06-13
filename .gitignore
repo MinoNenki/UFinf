@@ -21,3 +21,6 @@ mobile_expo/android/app/debug.keystore
 Thumbs.db
 
 .vercel
+
+.vercel
+.env*

@@ -51,6 +51,8 @@ type QueueState = {
 const QUEUE_FILE = path.join(process.cwd(), '.runtime', 'publish-queue.json');
 const PLATFORMS: PublishPlatform[] = ['tiktok', 'youtube', 'instagram', 'facebook', 'x'];
 
+let memoryQueueState: QueueState | null = null;
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -69,13 +71,21 @@ async function readQueue(): Promise<QueueState> {
       deadLetters: parsed.deadLetters || [],
     };
   } catch {
+    if (memoryQueueState) {
+      return memoryQueueState;
+    }
     return { jobs: [], idempotency: {}, deadLetters: [] };
   }
 }
 
 async function writeQueue(state: QueueState) {
-  await mkdir(path.dirname(QUEUE_FILE), { recursive: true });
-  await writeFile(QUEUE_FILE, JSON.stringify(state, null, 2), 'utf8');
+  memoryQueueState = state;
+  try {
+    await mkdir(path.dirname(QUEUE_FILE), { recursive: true });
+    await writeFile(QUEUE_FILE, JSON.stringify(state, null, 2), 'utf8');
+  } catch {
+    // Readonly FS in serverless must not break publish queue handling.
+  }
 }
 
 function initialPlatformState(enabledPlatforms: PublishPlatform[]) {

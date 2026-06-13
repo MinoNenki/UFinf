@@ -4,7 +4,7 @@ import { PlanKey } from '@/lib/settings';
 import { readSettings } from '@/lib/server/settingsStore';
 import { reserveUsage } from '@/lib/server/usageStore';
 import { enqueuePublishJob, getJobByIdempotencyKey, processPublishJob, PublishPlatform } from '@/lib/server/publishQueue';
-import { generateGrowthPack } from '@/lib/mockAi';
+import { generateGrowthPackFromProvider } from '@/lib/server/aiProvider';
 import { buildOneClickHybridPlan } from '@/lib/server/hybridEngine';
 
 const DEFAULT_PLATFORMS: PublishPlatform[] = ['tiktok', 'youtube', 'instagram', 'facebook', 'x'];
@@ -48,12 +48,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: usageReservation.message, guard, usage: usageReservation.usage }, { status: 402 });
   }
 
-  const pack = generateGrowthPack({ topic, niche, platform: platforms.join(','), language });
   const hybridPlan = buildOneClickHybridPlan(plan, {
     hasOpenAi: Boolean(settings.apiKeys.openaiApiKey),
     hasAnthropic: Boolean(settings.apiKeys.anthropicApiKey),
   });
-  const hasRealAi = Boolean(settings.apiKeys.openaiApiKey || settings.apiKeys.anthropicApiKey);
+
+  let pack;
+  try {
+    pack = await generateGrowthPackFromProvider({
+      topic,
+      niche,
+      platform: platforms.join(','),
+      language,
+      openaiApiKey: settings.apiKeys.openaiApiKey,
+      anthropicApiKey: settings.apiKeys.anthropicApiKey,
+    });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Nie udalo sie przygotowac tresci do publikacji.' }, { status: 502 });
+  }
 
   const existing = await getJobByIdempotencyKey(idempotencyKey);
   if (existing) {
@@ -71,7 +83,7 @@ export async function POST(req: Request) {
     idempotencyKey,
     topic,
     plan,
-    mode: hasRealAi ? 'hybrid' : 'safe_demo',
+    mode: 'hybrid',
     platforms,
     payload: {
       descriptionByPlatform: {

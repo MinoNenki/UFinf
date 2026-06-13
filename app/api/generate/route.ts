@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { budgetGuard } from '@/lib/budget';
 import type { PlanKey } from '@/lib/settings';
-import { generateGrowthPack } from '@/lib/mockAi';
+import { generateGrowthPackFromProvider } from '@/lib/server/aiProvider';
 import { readSettings } from '@/lib/server/settingsStore';
 import { reserveUsage } from '@/lib/server/usageStore';
 import { buildOneClickHybridPlan } from '@/lib/server/hybridEngine';
@@ -27,19 +27,30 @@ export async function POST(req: Request) {
     }, { status: 402 });
   }
 
-  // Tu docelowo podłączasz OpenAI/Anthropic. MVP działa bez spalania kluczy API.
-  const result = generateGrowthPack({
-    topic,
-    platform: String(body.platform || 'all'),
-    niche: String(body.niche || 'creator economy'),
-    language: String(body.language || 'pl') as 'pl' | 'en' | 'es',
-  });
+  const language = String(body.language || 'pl') as 'pl' | 'en' | 'es';
+
+  let result;
+  try {
+    result = await generateGrowthPackFromProvider({
+      topic,
+      platform: String(body.platform || 'all'),
+      niche: String(body.niche || 'creator economy'),
+      language,
+      openaiApiKey: settings.apiKeys.openaiApiKey,
+      anthropicApiKey: settings.apiKeys.anthropicApiKey,
+    });
+  } catch (error) {
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Nie udalo sie wygenerowac tresci AI.',
+      guard,
+      usage: usageReservation.usage,
+    }, { status: 502 });
+  }
 
   const hybridPlan = buildOneClickHybridPlan(plan, {
     hasOpenAi: Boolean(settings.apiKeys.openaiApiKey),
     hasAnthropic: Boolean(settings.apiKeys.anthropicApiKey),
   });
-  const hasRealAiKey = Boolean(settings.apiKeys.openaiApiKey || settings.apiKeys.anthropicApiKey);
 
   if (Array.isArray(body.metrics) && body.metrics.length > 0) {
     await ingestBrainEvents(body.metrics);
@@ -51,6 +62,6 @@ export async function POST(req: Request) {
     result,
     features: settings.features,
     hybridPlan,
-    mode: hasRealAiKey ? 'ready_for_real_ai' : 'safe_demo_mode',
+    mode: 'real_ai',
   });
 }

@@ -65,7 +65,13 @@ export default function ContentFactory() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic, niche, plan, platform: selectedPlatforms.join(','), language }),
       });
-      const data = await res.json();
+      const raw = await res.text();
+      const data = raw ? JSON.parse(raw) : {};
+      if (!res.ok) {
+        setResult({ error: data?.error || raw || copy.error });
+        setLoading(false);
+        return;
+      }
       setResult(data);
       if (data.result) {
         setStep(3);

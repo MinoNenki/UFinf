@@ -7,19 +7,29 @@ type RateLimitState = {
 
 const RATE_LIMIT_FILE = path.join(process.cwd(), '.runtime', 'rate-limit.json');
 
+let memoryRateLimitState: RateLimitState | null = null;
+
 async function readState(): Promise<RateLimitState> {
   try {
     const raw = await readFile(RATE_LIMIT_FILE, 'utf8');
     const parsed = JSON.parse(raw) as Partial<RateLimitState>;
     return { buckets: parsed.buckets || {} };
   } catch {
+    if (memoryRateLimitState) {
+      return memoryRateLimitState;
+    }
     return { buckets: {} };
   }
 }
 
 async function writeState(state: RateLimitState) {
-  await mkdir(path.dirname(RATE_LIMIT_FILE), { recursive: true });
-  await writeFile(RATE_LIMIT_FILE, JSON.stringify(state, null, 2), 'utf8');
+  memoryRateLimitState = state;
+  try {
+    await mkdir(path.dirname(RATE_LIMIT_FILE), { recursive: true });
+    await writeFile(RATE_LIMIT_FILE, JSON.stringify(state, null, 2), 'utf8');
+  } catch {
+    // Readonly FS fallback: keep state in memory for current runtime.
+  }
 }
 
 export async function consumeRateLimit(input: {

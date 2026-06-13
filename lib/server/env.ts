@@ -50,6 +50,7 @@ export function validateEnvOnStartup() {
 
   const adminSecret = process.env.ADMIN_SESSION_SECRET || '';
   const adminPassword = process.env.ADMIN_PASSWORD || '';
+  const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH || '';
   const adminTotpSecret = process.env.ADMIN_TOTP_SECRET || '';
   const adminRole = process.env.ADMIN_ROLE || 'super_admin';
 
@@ -57,8 +58,10 @@ export function validateEnvOnStartup() {
     throw new Error('ENV_INVALID: ADMIN_SESSION_SECRET musi miec co najmniej 32 znaki w produkcji.');
   }
 
-  if (isProd && adminPassword.length < 10) {
-    throw new Error('ENV_INVALID: ADMIN_PASSWORD musi miec co najmniej 10 znakow w produkcji.');
+  const hasValidPlainPassword = adminPassword.length >= 10;
+  const hasHashPassword = adminPasswordHash.startsWith('pbkdf2$sha256$');
+  if (isProd && !hasValidPlainPassword && !hasHashPassword) {
+    throw new Error('ENV_INVALID: ustaw ADMIN_PASSWORD (min 10 znakow) lub ADMIN_PASSWORD_HASH (format pbkdf2$sha256$...).');
   }
 
   if (isProd && adminTotpSecret.length < 16) {

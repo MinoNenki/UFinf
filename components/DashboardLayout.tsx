@@ -43,14 +43,14 @@ const NAV_ITEMS = [
 const COPY = {
   pl: {
     labels: {
-      dashboard: 'Dashboard', factory: 'Content Factory', publish: 'One Click Publish', trends: 'Trend Radar', competition: 'AI Konkurencja',
-      coach: 'Growth Coach', inbox: 'Smart Inbox', studio: 'AI Studio', brain: 'Content Brain v2', revenue: 'Revenue AI',
+      dashboard: 'Panel glowny', factory: 'Fabryka tresci', publish: 'Publikacja 1 kliknieciem', trends: 'Radar trendow', competition: 'Analiza konkurencji',
+      coach: 'Asystent wzrostu AI', inbox: 'Smart Inbox', studio: 'Studio AI', brain: 'Mózg tresci AI', revenue: 'Przychody AI',
       account: 'Moje konto', admin: 'Panel admina', settings: 'Ustawienia',
     },
     sections: { main: 'Glowne', tools: 'Narzedzia', account: 'Konto' },
-    plan: 'Plan Pro',
-    generations: '37 generacji dzis',
-    upgrade: 'Upgrade',
+    plan: 'Konto uzytkownika',
+    generations: 'Sprawdz limity, platnosci i stan integracji w Moje konto.',
+    upgrade: 'Szczegoly',
     newContent: '+ Nowa tresc',
     landing: '← Landing',
     loadingSession: 'Ladowanie sesji...',
@@ -64,7 +64,7 @@ const COPY = {
   en: {
     labels: {
       dashboard: 'Dashboard', factory: 'Content Factory', publish: 'One Click Publish', trends: 'Trend Radar', competition: 'AI Competition',
-      coach: 'Growth Coach', inbox: 'Smart Inbox', studio: 'AI Studio', brain: 'Content Brain v2', revenue: 'Revenue AI',
+      coach: 'Growth Coach', inbox: 'Smart Inbox', studio: 'AI Studio', brain: 'AI Content Brain', revenue: 'Revenue AI',
       account: 'My account', admin: 'Admin panel', settings: 'Settings',
     },
     sections: { main: 'Main', tools: 'Tools', account: 'Account' },
@@ -84,7 +84,7 @@ const COPY = {
   es: {
     labels: {
       dashboard: 'Dashboard', factory: 'Fabrica de contenido', publish: 'Publicacion en un clic', trends: 'Radar de tendencias', competition: 'Competencia AI',
-      coach: 'Growth Coach', inbox: 'Bandeja inteligente', studio: 'AI Studio', brain: 'Content Brain v2', revenue: 'Revenue AI',
+      coach: 'Growth Coach', inbox: 'Bandeja inteligente', studio: 'AI Studio', brain: 'AI Content Brain', revenue: 'Ingresos AI',
       account: 'Mi cuenta', admin: 'Panel admin', settings: 'Ajustes',
     },
     sections: { main: 'Principal', tools: 'Herramientas', account: 'Cuenta' },
@@ -249,7 +249,7 @@ export default function DashboardLayout() {
             </div>
             <button
               style={{ fontSize: 11, color: 'var(--cyan)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
-              onClick={() => handleNav('/dashboard/settings')}
+              onClick={() => handleNav('/dashboard/account')}
             >
               {copy.upgrade}
             </button>

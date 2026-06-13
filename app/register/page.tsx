@@ -41,7 +41,12 @@ export default function RegisterPage() {
 
       router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      if (message.toLowerCase().includes('rate limit')) {
+        setError('Zbyt wiele prób rejestracji. System automatycznie ponawiał próby, ale limit się wyczerpał. Czekaj 5 minut i spróbuj ponownie.');
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }

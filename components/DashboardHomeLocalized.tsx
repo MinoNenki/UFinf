@@ -1,182 +1,127 @@
 'use client';
 
-import { TrendingUp, Eye, Users, DollarSign, CalendarClock, Flame, CheckCircle2, Brain } from 'lucide-react';
-import { MOCK_STATS, MOCK_COACH_ACTIONS, MOCK_PLATFORM_STATUS, MOCK_RECENT_CONTENT, MOCK_TRENDS } from '@/lib/mockData';
+import { useEffect, useState } from 'react';
+import { CalendarClock, Brain, ShieldCheck, UserCircle2, Sparkles } from 'lucide-react';
 import { navigate } from '@/lib/navigate';
 import { byLanguage, useI18n } from '@/lib/i18n';
-
-const SCORE = 87;
+import { useAuth } from '@/lib/authContext';
 
 export default function DashboardHomeLocalized() {
   const { language } = useI18n();
+  const { user, authMode } = useAuth();
+  const [remainingTopUps, setRemainingTopUps] = useState<number | null>(null);
   const copy = byLanguage(language, {
     pl: {
-      score: 'Growth Score', top: 'Top 15% tworcow premium', week: '+3 punkty w tym tygodniu',
-      labels: ['Wyswietlenia', 'Subskrybenci', 'Zaangazowanie', 'Przychod'],
-      hot: 'Goracy trend!', suffix: 'idealne dla Twojej niszy!', cta: 'Wygeneruj teraz ->',
-      today: 'Plan na dzis', full: 'Pelny plan -> Growth Coach', status: 'STATUS PLATFORM', disconnected: 'Niepolaczony',
-      recent: 'OSTATNIE TRESCI', best: 'Najlepszy czas na publikacje dzisiaj', bestText: 'Twoja nisza osiaga szczytowe zaangazowanie miedzy 18:00-20:00 - to okno z najwyzszym potencjalem konwersji.',
-      publish: 'One Click Publish', premium: 'Premium Plus', publishText: 'Wrzucasz material i klikasz "Publish Everywhere". System przygotowuje opisy, hashtagi, miniature, CTA i gotowe pakiety publikacji pod kazda platforme.',
-      brain: 'AI Content Brain', insight: 'Insight', brainText: 'Twoje filmy o AI osiagaja o 70% wiecej wyswietlen niz filmy o programowaniu. Publikuj miedzy ',
-      actions: ['Opublikuj film na TikTok i YouTube Shorts', 'Nagraj: "AI tools for creators - TOP 5 w 2025"', 'Odpowiedz na pierwsze 10 komentarzy (Smart Inbox)'],
-      dates: ['2 godz. temu', 'Wczoraj', '3 dni temu'],
+      title: 'Stan konta i systemu',
+      subtitle: 'Ten dashboard pokazuje tylko dane potwierdzone przez system. Brak fikcyjnych statystyk i demo liczb.',
+      cards: ['Zalogowany uzytkownik', 'Tryb logowania', 'Jednorazowe generacje', 'Analityka platform'],
+      emptyMetrics: 'Brak realnych danych. Podlacz platformy i wykonaj pierwsze publikacje, aby zobaczyc wyniki.',
+      account: 'Moje konto',
+      generate: 'Przejdz do generowania',
+      coach: 'Kolejne kroki',
+      coachItems: [
+        'Uzupelnij klucze AI i integracje platform w panelu administratora.',
+        'Wygeneruj pierwsza tresc z prawdziwego tematu, bez danych demo.',
+        'Po publikacji i pierwszych interakcjach dashboard zacznie pokazywac realne liczby.',
+      ],
+      verified: 'Zweryfikowany email',
+      yes: 'Tak',
+      no: 'Nie',
+      topUpFallback: 'Brak aktywnych pakietow jednorazowych',
+      authModes: { supabase: 'Supabase', local: 'Lokalny fallback' },
+      best: 'Najlepsza praktyka na start',
+      bestText: 'Najpierw napraw konfiguracje i przeplywy, potem pokazuj klientowi tylko dane pochodzace z prawdziwych zrodel.',
     },
     en: {
-      score: 'Growth Score', top: 'Top 15% premium creators', week: '+3 points this week',
-      labels: ['Views', 'Subscribers', 'Engagement', 'Revenue'],
-      hot: 'Hot trend!', suffix: 'perfect for your niche!', cta: 'Generate now ->',
-      today: 'Plan for today', full: 'Full plan -> Growth Coach', status: 'PLATFORM STATUS', disconnected: 'Not connected',
-      recent: 'RECENT CONTENT', best: 'Best time to publish today', bestText: 'Your niche reaches peak engagement between 6:00 PM and 8:00 PM - your highest conversion window.',
-      publish: 'One Click Publish', premium: 'Premium Plus', publishText: 'Upload once and click "Publish Everywhere". The system builds platform-ready descriptions, hashtags, thumbnails, CTA blocks, and execution-ready publish packages.',
-      brain: 'AI Content Brain', insight: 'Insight', brainText: 'Your AI videos get 70% more views than programming videos. Publish between ',
-      actions: ['Publish the video to TikTok and YouTube Shorts', 'Record: "AI tools for creators - TOP 5 in 2025"', 'Reply to the first 10 comments (Smart Inbox)'],
-      dates: ['2 hours ago', 'Yesterday', '3 days ago'],
+      title: 'Account and system status', subtitle: 'This dashboard only shows system-confirmed data. No fake statistics or demo numbers.', cards: ['Logged user', 'Auth mode', 'One-time generations', 'Platform analytics'], emptyMetrics: 'No real data yet. Connect platforms and publish first content to see metrics.', account: 'My account', generate: 'Go to content generation', coach: 'Next steps', coachItems: ['Complete AI keys and platform integrations in the admin panel.', 'Generate your first content from a real topic, with no demo data.', 'After publishing and first interactions, the dashboard will start showing real numbers.'], verified: 'Verified email', yes: 'Yes', no: 'No', topUpFallback: 'No active one-time packs', authModes: { supabase: 'Supabase', local: 'Local fallback' }, best: 'Best first step', bestText: 'Fix configuration and flows first, then show the client only data coming from real sources.'
     },
     es: {
-      score: 'Growth Score', top: 'Top 15% de creadores premium', week: '+3 puntos esta semana',
-      labels: ['Vistas', 'Suscriptores', 'Engagement', 'Ingresos'],
-      hot: 'Tendencia caliente!', suffix: 'perfecta para tu nicho!', cta: 'Generar ahora ->',
-      today: 'Plan para hoy', full: 'Plan completo -> Growth Coach', status: 'ESTADO DE PLATAFORMAS', disconnected: 'No conectado',
-      recent: 'CONTENIDO RECIENTE', best: 'Mejor momento para publicar hoy', bestText: 'Tu nicho alcanza el pico de engagement entre las 18:00 y las 20:00 - la ventana de mayor conversion.',
-      publish: 'Publicacion en un clic', premium: 'Premium Plus', publishText: 'Subes una vez y haces clic en "Publish Everywhere". El sistema crea descripciones, hashtags, miniaturas, CTA y paquetes listos para publicar en cada plataforma.',
-      brain: 'AI Content Brain', insight: 'Insight', brainText: 'Tus videos de AI consiguen un 70% mas de vistas que los videos de programacion. Publica entre ',
-      actions: ['Publica el video en TikTok y YouTube Shorts', 'Graba: "AI tools for creators - TOP 5 en 2025"', 'Responde a los primeros 10 comentarios (Smart Inbox)'],
-      dates: ['hace 2 horas', 'Ayer', 'hace 3 dias'],
+      title: 'Estado de la cuenta y del sistema', subtitle: 'Este dashboard solo muestra datos confirmados por el sistema. Sin estadisticas falsas ni numeros demo.', cards: ['Usuario conectado', 'Modo de acceso', 'Generaciones de un solo uso', 'Analitica de plataformas'], emptyMetrics: 'Aun no hay datos reales. Conecta plataformas y publica el primer contenido para ver metricas.', account: 'Mi cuenta', generate: 'Ir a generar contenido', coach: 'Siguientes pasos', coachItems: ['Completa claves AI e integraciones de plataformas en el panel admin.', 'Genera el primer contenido desde un tema real, sin datos demo.', 'Despues de publicar y recibir primeras interacciones, el dashboard mostrara numeros reales.'], verified: 'Correo verificado', yes: 'Si', no: 'No', topUpFallback: 'Sin paquetes de un solo uso activos', authModes: { supabase: 'Supabase', local: 'Fallback local' }, best: 'Mejor primer paso', bestText: 'Primero corrige configuracion y flujos; despues muestra al cliente solo datos de fuentes reales.'
     },
   });
-  const hotTrend = MOCK_TRENDS.find((item) => item.hot);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/usage/topup')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active) return;
+        setRemainingTopUps(Number(data?.usage?.topUpGenerationsRemaining || 0));
+      })
+      .catch(() => {
+        if (!active) return;
+        setRemainingTopUps(0);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="animate-in">
-      <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, marginBottom: 20 }}>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="score-ring ring-lg" style={{ ['--pct' as any]: `${SCORE}%`, width: 140, height: 140 }}>
-            <div className="score-ring-inner">
-              <div className="score-number">{SCORE}</div>
-              <div className="score-label">{copy.score}</div>
-            </div>
+      <div className="page-header">
+        <h1>{copy.title}</h1>
+        <p>{copy.subtitle}</p>
+      </div>
+
+      <div className="grid-2" style={{ gap: 16, marginBottom: 16 }}>
+        <div className="card">
+          <div className="flex items-center gap-8" style={{ marginBottom: 12 }}>
+            <UserCircle2 size={18} color="var(--cyan)" />
+            <strong>{copy.cards[0]}</strong>
           </div>
-          <div style={{ marginTop: 12, textAlign: 'center' }}>
-            <div style={{ fontSize: 11, color: 'var(--muted)' }}>{copy.top}</div>
-            <div style={{ fontSize: 12, color: 'var(--green)', fontWeight: 700, marginTop: 2 }}>{copy.week}</div>
-          </div>
+          <div style={{ fontSize: 14, marginBottom: 6 }}>{user?.displayName || user?.email || '—'}</div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>{user?.email || '—'}</div>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10 }}>{copy.verified}: <strong>{user?.emailVerified ? copy.yes : copy.no}</strong></div>
         </div>
 
         <div className="grid-2" style={{ gap: 12 }}>
-          {[
-            { label: copy.labels[0], value: MOCK_STATS.views.value, change: MOCK_STATS.views.change, icon: Eye, color: 'var(--cyan)' },
-            { label: copy.labels[1], value: MOCK_STATS.subscribers.value, change: MOCK_STATS.subscribers.change, icon: Users, color: 'var(--violet)' },
-            { label: copy.labels[2], value: MOCK_STATS.engagement.value, change: MOCK_STATS.engagement.change, icon: TrendingUp, color: 'var(--green)' },
-            { label: copy.labels[3], value: MOCK_STATS.revenue.value, change: MOCK_STATS.revenue.change, icon: DollarSign, color: 'var(--yellow)' },
-          ].map(({ label, value, change, icon: Icon, color }) => (
-            <div key={label} className="stat-card">
-              <div className="flex items-center justify-between mb-8">
-                <span className="stat-label">{label}</span>
-                <Icon size={16} color={color} />
-              </div>
-              <div className="stat-value">{value}</div>
-              <div className="stat-change stat-up"><TrendingUp size={12} /> {change}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {hotTrend && (
-        <div className="alert alert-warning mb-16" style={{ marginBottom: 16 }}>
-          <Flame size={18} />
-          <div>
-            <strong>{copy.hot}</strong> <span style={{ fontWeight: 900 }}>&quot;{hotTrend.topic}&quot;</span> +{hotTrend.growth}% - {copy.suffix}{' '}
-            <button style={{ color: 'var(--yellow)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 13, fontFamily: 'inherit' }} onClick={() => navigate('/dashboard/factory')}>
-              {copy.cta}
-            </button>
+          <div className="stat-card">
+            <div className="stat-label">{copy.cards[1]}</div>
+            <div className="stat-value" style={{ fontSize: 22 }}>{copy.authModes[authMode]}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">{copy.cards[2]}</div>
+            <div className="stat-value" style={{ fontSize: 22 }}>{remainingTopUps == null ? '…' : remainingTopUps}</div>
+            <div className="stat-change">{remainingTopUps ? '' : copy.topUpFallback}</div>
+          </div>
+          <div className="stat-card" style={{ gridColumn: '1 / -1' }}>
+            <div className="stat-label">{copy.cards[3]}</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>{copy.emptyMetrics}</div>
           </div>
         </div>
-      )}
+      </div>
 
       <div className="grid-2-1" style={{ gap: 20 }}>
         <div className="card">
           <div className="flex items-center justify-between mb-16">
             <div className="flex items-center gap-8">
               <Brain size={18} color="var(--violet)" />
-              <h3 style={{ fontSize: 15, fontWeight: 700 }}>{copy.today}</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 700 }}>{copy.coach}</h3>
             </div>
-            <span className="badge badge-violet">AI Coach</span>
+            <span className="badge badge-violet">AI</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {MOCK_COACH_ACTIONS.slice(0, 3).map((action, index) => (
-              <div key={action.id} className={`action-item action-priority-${action.priority}`}>
-                <div className="action-checkbox">{action.done && <CheckCircle2 size={13} color="var(--bg)" />}</div>
-                <div style={{ flex: 1 }}><div className="action-text">{copy.actions[index] || action.action}</div></div>
-                <div className="action-time">{action.time}</div>
+            {copy.coachItems.map((item) => (
+              <div key={item} className="action-item action-priority-medium">
+                <div className="action-checkbox"><ShieldCheck size={13} color="var(--bg)" /></div>
+                <div style={{ flex: 1 }}><div className="action-text">{item}</div></div>
               </div>
             ))}
           </div>
-          <button className="btn btn-ghost btn-sm btn-full" style={{ marginTop: 12 }} onClick={() => navigate('/dashboard/coach')}>{copy.full}</button>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div className="card card-sm">
-            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--muted)' }}>{copy.status}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {MOCK_PLATFORM_STATUS.map((item) => (
-                <div key={item.platform} className="flex items-center justify-between">
-                  <div className="flex items-center gap-8">
-                    <span className={`status-dot ${item.connected ? 'online' : 'offline'}`} />
-                    <span style={{ fontSize: 13, fontWeight: 600 }}>{item.platform}</span>
-                  </div>
-                  <span style={{ fontSize: 12, color: item.connected ? 'var(--muted)' : 'var(--muted2)' }}>{item.connected ? item.followers : copy.disconnected}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="card card-sm">
-            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'var(--muted)' }}>{copy.recent}</h3>
-            {MOCK_RECENT_CONTENT.map((item, index) => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{item.topic}</div>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {item.platforms.map((platform) => <span key={platform} className={`badge badge-muted plat-${platform}`} style={{ fontSize: 10, padding: '1px 6px' }}>{platform}</span>)}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 13, color: 'var(--cyan)', fontWeight: 700 }}>{item.score}/100</div>
-                  <div style={{ fontSize: 10, color: 'var(--muted2)' }}>{copy.dates[index] || item.date}</div>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center gap-8" style={{ marginTop: 12, flexWrap: 'wrap' }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => navigate('/dashboard/account')}>{copy.account}</button>
+            <button className="btn btn-primary btn-sm" onClick={() => navigate('/dashboard/factory')}><Sparkles size={13} /> {copy.generate}</button>
           </div>
         </div>
-      </div>
 
-      <div className="card" style={{ marginTop: 16, background: 'rgba(34,211,238,.06)', borderColor: 'rgba(34,211,238,.2)' }}>
-        <div className="flex items-center gap-12">
-          <CalendarClock size={20} color="var(--cyan)" />
-          <div>
-            <div style={{ fontWeight: 700 }}>{copy.best}</div>
-            <div style={{ color: 'var(--muted)', fontSize: 13 }}>{copy.bestText}</div>
+        <div className="card">
+          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>{copy.best}</h3>
+          <p style={{ color: 'var(--muted)', lineHeight: 1.7 }}>{copy.bestText}</p>
+          <div className="alert alert-info" style={{ marginTop: 14 }}>
+            <CalendarClock size={16} />
+            <div>{copy.emptyMetrics}</div>
           </div>
-          <div style={{ marginLeft: 'auto', fontSize: 22, fontWeight: 900, color: 'var(--cyan)' }}>18:00-20:00</div>
-        </div>
-      </div>
-
-      <div className="grid-2" style={{ gap: 16, marginTop: 16 }}>
-        <div className="card" style={{ background: 'linear-gradient(135deg,rgba(236,72,153,.1),rgba(139,92,246,.1))', borderColor: 'rgba(139,92,246,.24)' }}>
-          <div className="flex items-center justify-between mb-8">
-            <h3 style={{ fontSize: 15, fontWeight: 800 }}>{copy.publish}</h3>
-            <span className="badge badge-violet">{copy.premium}</span>
-          </div>
-          <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10 }}>{copy.publishText}</p>
-          <button className="btn btn-gradient btn-sm btn-pulse-attention" onClick={() => navigate('/dashboard/factory')}>Publish Everywhere</button>
-        </div>
-
-        <div className="card" style={{ background: 'rgba(52,211,153,.08)', borderColor: 'rgba(52,211,153,.22)' }}>
-          <div className="flex items-center justify-between mb-8">
-            <h3 style={{ fontSize: 15, fontWeight: 800 }}>{copy.brain}</h3>
-            <span className="badge badge-green">{copy.insight}</span>
-          </div>
-          <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7 }}>{copy.brainText}<strong style={{ color: 'var(--green)' }}>18:00 a 20:00</strong>.</p>
         </div>
       </div>
     </div>

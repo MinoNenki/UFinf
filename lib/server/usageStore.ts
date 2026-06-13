@@ -32,6 +32,8 @@ type SubscriptionEntitlement = {
 
 const USAGE_FILE = path.join(process.cwd(), '.runtime', 'usage-state.json');
 
+let memoryUsageState: UsageState | null = null;
+
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -93,13 +95,29 @@ async function readUsage(): Promise<UsageState> {
     }
     return merged;
   } catch {
+    if (memoryUsageState) {
+      return memoryUsageState.dayKey === todayKey()
+        ? memoryUsageState
+        : {
+            ...defaultUsage(),
+            topUpGenerationsRemaining: memoryUsageState.topUpGenerationsRemaining,
+            topUpPurchases: memoryUsageState.topUpPurchases,
+            fulfilledStripeSessions: memoryUsageState.fulfilledStripeSessions,
+            subscriptionEntitlements: memoryUsageState.subscriptionEntitlements,
+          };
+    }
     return defaultUsage();
   }
 }
 
 async function writeUsage(state: UsageState) {
-  await mkdir(path.dirname(USAGE_FILE), { recursive: true });
-  await writeFile(USAGE_FILE, JSON.stringify(state, null, 2), 'utf8');
+  memoryUsageState = state;
+  try {
+    await mkdir(path.dirname(USAGE_FILE), { recursive: true });
+    await writeFile(USAGE_FILE, JSON.stringify(state, null, 2), 'utf8');
+  } catch {
+    // Produkcyjne runtime'y bez zapisu do FS nie mogą blokować requestów generowania.
+  }
 }
 
 export async function reserveUsage(plan: PlanKey, estimatedCostUsd: number, antiLoss: AntiLossSettings) {

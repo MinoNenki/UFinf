@@ -1,7 +1,6 @@
 'use client';
 
 import { Brain, CalendarClock, CheckCircle2 } from 'lucide-react';
-import { MOCK_COACH_ACTIONS } from '@/lib/mockData';
 import { byLanguage, useI18n } from '@/lib/i18n';
 
 export default function Coach() {
@@ -9,25 +8,25 @@ export default function Coach() {
   const copy = byLanguage(language, {
     pl: { 
       title: 'AI Growth Coach', 
-      subtitle: 'Codzienny plan działań na podstawie trendów i wyników kanału.', 
+      subtitle: 'Codzienny plan dzialan bez udawanych metryk i bez zmyslonych wzrostow.', 
       priority: 'Priorytet dnia', 
-      priorityText: '✨ Opublikuj główny material między 18:00 a 20:00 i odpowiedz na 15 najnowszych komentarzy w ciągu 30 minut — to podnosi reach +45%.',
+      priorityText: 'Najpierw skonfiguruj realne zrodla danych i AI, a dopiero potem oceniaj skutecznosc publikacji.',
       plan: 'Plan na dzisiaj', 
       actions: [
-        '✨ PRIORYTET: Opublikuj film #1 na TikTok & YouTube Shorts (hook w 1s, min 720p, fast cuts)',
-        '🎬 Nagraj: "AI tools for creators — TOP 5 w 2025" (3-5 min, setup z neonowym tłem, B-roll)',
-        '💬 ENGAGEMENT PUSH: Odpowiedz na pierwsze 15 komentarzy w 30 min (boost +45% algorytm, fav every reply)',
-        '📱 Repurpose: Opublikuj Instagram Reels (add subs, 9:16, emoji text), TikTok (zmień hook), Shorts (add cards)',
-        '📊 Analytics check: Sprawdź CTR, watch time, save rate na ostatnim filmie — przygotuj A/B dla kolejnego',
-        '📅 Content planning: 5 pomysłów na tydzień (trending + evergreen + collaboration ideas)',
-        '🔔 PIN Best comment z CTą: "Sprawdź pełny poradnik w naszym ostatnim video" (boost interactions)'
+        'Dodaj prawdziwe klucze AI i integracje platform w ustawieniach administratora.',
+        'Wygeneruj pierwsza tresc z rzeczywistego tematu klienta.',
+        'Opublikuj material tylko na polaczonych platformach.',
+        'Zbierz pierwsze interakcje i wtedy oceniaj dane w dashboardzie.',
+        'Uzupelnij opis, CTA i miniature pod konkretna platforme.',
+        'Sprawdz poprawne dzialanie checkoutu i status platnosci przed oferta dla klienta.',
+        'Wylacz lub ukryj modul, jesli nie ma jeszcze prawdziwych danych do pokazania.'
       ] 
     },
     en: { 
       title: 'AI Growth Coach', 
-      subtitle: 'Daily action plan based on trends and channel performance.', 
+      subtitle: 'Daily action plan without fake metrics or invented performance.', 
       priority: 'Priority of the day', 
-      priorityText: '✨ Publish your main piece between 6:00 PM and 8:00 PM and reply to the latest 15 comments within 30 minutes — this boosts reach +45%.',
+      priorityText: 'Configure real data sources and AI first, then evaluate publishing performance.',
       plan: 'Plan for today', 
       actions: [
         '✨ PRIORITY: Publish video #1 to TikTok & YouTube Shorts (hook in 1s, min 720p, fast cuts)',
@@ -41,9 +40,9 @@ export default function Coach() {
     },
     es: { 
       title: 'AI Growth Coach', 
-      subtitle: 'Plan diario de acciones basado en tendencias y resultados del canal.', 
+      subtitle: 'Plan diario sin metricas falsas ni resultados inventados.', 
       priority: 'Prioridad del día', 
-      priorityText: '✨ Publica la pieza principal entre las 18:00 y las 20:00 y responde a los 15 comentarios más recientes en 30 minutos — esto aumenta reach +45%.',
+      priorityText: 'Primero configura fuentes reales de datos e IA y solo despues evalua el rendimiento.',
       plan: 'Plan para hoy', 
       actions: [
         '✨ PRIORIDAD: Publica video #1 en TikTok & YouTube Shorts (hook en 1s, min 720p, cortes rápidos)',
@@ -80,15 +79,15 @@ export default function Coach() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {MOCK_COACH_ACTIONS.map((item, index) => (
-            <div key={item.id} className={`action-item action-priority-${item.priority}${item.done ? ' done' : ''}`}>
+          {copy.actions.map((action, index) => (
+            <div key={action} className={`action-item action-priority-${index < 2 ? 'high' : index < 5 ? 'medium' : 'low'}`}>
               <div className="action-checkbox">
-                {item.done && <CheckCircle2 size={13} color="var(--bg)" />}
+                <CheckCircle2 size={13} color="var(--bg)" />
               </div>
               <div style={{ flex: 1 }}>
-                <div className="action-text">{copy.actions[index] || item.action}</div>
+                <div className="action-text">{action}</div>
               </div>
-              <div className="action-time">{item.time}</div>
+              <div className="action-time">{index === 0 ? '1' : index + 1}</div>
             </div>
           ))}
         </div>

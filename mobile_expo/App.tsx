@@ -21,7 +21,7 @@ const APP_STORE_URL = process.env.EXPO_PUBLIC_APP_STORE_URL || 'https://apps.app
 const GOOGLE_PLAY_URL = process.env.EXPO_PUBLIC_GOOGLE_PLAY_URL || 'https://play.google.com/store';
 const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL || 'http://localhost:3000';
 const API_URL = process.env.EXPO_PUBLIC_API_URL || WEB_URL;
-const SUPABASE_REDIRECT_URI = makeRedirectUri({ scheme: 'aigrowthos', path: 'auth/callback' });
+const SUPABASE_REDIRECT_URI = makeRedirectUri({ scheme: 'ufinfluencer', path: 'auth/callback' });
 
 export default function App() {
   const [topic, setTopic] = useState('Wrzucam film o AI dla tworcow i chce publikacje na wszystkie platformy.');

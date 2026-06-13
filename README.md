@@ -68,10 +68,12 @@ Ten MVP dziala bez kluczy API, zeby nie spalac budzetu podczas testow. Dopiero p
 ## Security hardening
 
 - Admin login wymaga: email + haslo + kod TOTP (2FA).
+- Dla admin hasla wspierany jest hash `ADMIN_PASSWORD_HASH` (`pbkdf2$sha256$...`) oraz stalo-czasowe porownanie po stronie serwera.
 - Sesja admin zawiera role RBAC (`super_admin`, `ops_admin`, `security_admin`, `analyst`).
 - `settings` ma permission check (`settings:read`, `settings:write`) + rate limiting.
 - Admin login i settings zapisują audit log do `.runtime/security-audit.jsonl`.
 - Publish queue wspiera idempotency i dead-letter queue (`.runtime/publish-queue.json`).
+- Global middleware wymusza naglowki security (CSP, HSTS, X-Frame-Options, COOP/CORP) oraz blokuje cross-site mutacje API.
 
 Uwaga: klucze API sa trzymane po stronie serwera i nigdy nie sa zwracane w GET.
 

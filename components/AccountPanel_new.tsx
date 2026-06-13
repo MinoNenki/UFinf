@@ -33,6 +33,7 @@ const COPY = {
     remaining: 'Pozostało generacji: ',
     userTitle: 'Profil zalogowanego',
     logoutBtn: 'Wyloguj się',
+    buy: 'Kup pakiet',
   },
   en: {
     title: 'My account',
@@ -51,6 +52,7 @@ const COPY = {
     remaining: 'Generations remaining: ',
     userTitle: 'Logged-in profile',
     logoutBtn: 'Log out',
+    buy: 'Buy pack',
   },
   es: {
     title: 'Mi cuenta',
@@ -69,6 +71,7 @@ const COPY = {
     remaining: 'Generaciones restantes: ',
     userTitle: 'Perfil de usuario conectado',
     logoutBtn: 'Cerrar sesión',
+    buy: 'Comprar paquete',
   },
 };
 
@@ -192,7 +195,7 @@ export default function AccountPanel() {
       <div className="grid-2" style={{ gap: 16 }}>
         {paymentMessage ? <div className="alert alert-info" style={{ gridColumn: '1 / -1' }}>{paymentMessage}</div> : null}
 
-        <div className="card">
+        {!user && <div className="card">
           <div className="flex items-center gap-8" style={{ marginBottom: 12 }}>
             <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(34,211,238,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               💌
@@ -220,7 +223,7 @@ export default function AccountPanel() {
             </button>
             {signupMessage && <div className="alert alert-info">{signupMessage}</div>}
           </div>
-        </div>
+        </div>}
 
         <div className="card">
           <div className="flex items-center gap-8" style={{ marginBottom: 12 }}>
@@ -255,7 +258,7 @@ export default function AccountPanel() {
                   onClick={() => buyTopUp(pack.id)}
                   disabled={topUpLoadingId === pack.id}
                 >
-                  {topUpLoadingId === pack.id ? '⏳' : 'Buy'}
+                  {topUpLoadingId === pack.id ? '⏳' : t.buy}
                 </button>
               </div>
             ))}
