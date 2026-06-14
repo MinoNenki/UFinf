@@ -22,6 +22,11 @@ type GrowthPack = {
   score: number;
   bestTime: string;
   trend: string;
+  performance: {
+    viralPotential: number;
+    conversionPotential: number;
+    engagementPotential: number;
+  };
   content: {
     tiktok: string;
     shorts: string;
@@ -32,6 +37,17 @@ type GrowthPack = {
   hashtags: string[];
   nextIdeas: string[];
   coach: string[];
+  campaignCalendar: Array<{
+    day: number;
+    title: string;
+    publishWindow: string;
+    tiktok: string;
+    shorts: string;
+    reels: string;
+    description: string;
+    hashtags: string[];
+    cta: string;
+  }>;
 };
 
 type PromptQualityIssue = {
@@ -110,18 +126,94 @@ function asStringArray(value: unknown, fallback: string[]) {
     : fallback;
 }
 
-function normalizePack(raw: unknown, language: AiLanguage): GrowthPack {
+function clampScore(value: unknown, fallback: number) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.min(100, Math.round(parsed)));
+}
+
+function ensureHashtags(tags: string[]) {
+  if (tags.length >= 8) return tags.slice(0, 14);
+  return [
+    ...tags,
+    '#growth',
+    '#contentstrategy',
+    '#socialmedia',
+    '#creator',
+    '#marketing',
+    '#tiktoktips',
+    '#shortsvideo',
+    '#reels',
+  ].filter((tag, index, all) => all.indexOf(tag) === index).slice(0, 14);
+}
+
+function buildCampaignCalendar(input: {
+  days: number;
+  language: AiLanguage;
+  topic: string;
+  niche: string;
+  baseTrend: string;
+  baseIdeas: string[];
+  baseHashtags: string[];
+  baseCta: string;
+}) {
+  const days = Math.max(1, Math.min(90, input.days));
+  const ideas = input.baseIdeas.length ? input.baseIdeas : [input.baseTrend || input.topic || 'Content pillar'];
+  const hashtags = ensureHashtags(input.baseHashtags);
+
+  return Array.from({ length: days }, (_, idx) => {
+    const day = idx + 1;
+    const seedIdea = ideas[idx % ideas.length] || input.topic;
+    const window = day % 3 === 0 ? '12:00-14:00' : day % 2 === 0 ? '18:00-20:00' : '08:00-10:00';
+
+    const title = input.language === 'pl'
+      ? `Dzien ${day}: ${seedIdea}`
+      : input.language === 'es'
+      ? `Dia ${day}: ${seedIdea}`
+      : `Day ${day}: ${seedIdea}`;
+
+    const cta = input.language === 'pl'
+      ? `${input.baseCta} (Dzien ${day})`
+      : input.language === 'es'
+      ? `${input.baseCta} (Dia ${day})`
+      : `${input.baseCta} (Day ${day})`;
+
+    return {
+      day,
+      title,
+      publishWindow: window,
+      tiktok: `${seedIdea} | Hook 1-2s + pattern break + szybkie cięcia`,
+      shorts: `${seedIdea} | Proof-first structure + retention loop`,
+      reels: `${seedIdea} | Storytelling intro + emotional pivot + CTA`,
+      description: `${input.niche}: ${seedIdea}`,
+      hashtags,
+      cta,
+    };
+  });
+}
+
+function normalizePack(raw: unknown, language: AiLanguage, requestedDays = 30): GrowthPack {
   const source = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
   const content = (typeof source.content === 'object' && source.content !== null ? source.content : {}) as Record<string, unknown>;
+  const performance = (typeof source.performance === 'object' && source.performance !== null ? source.performance : {}) as Record<string, unknown>;
 
   const defaultVerdict = language === 'pl' ? 'GOTOWE DO PUBLIKACJI' : language === 'es' ? 'LISTO PARA PUBLICAR' : 'READY TO PUBLISH';
   const defaultBestTime = language === 'pl' ? '18:00-20:00' : '6:00 PM-8:00 PM';
+  const hashtags = ensureHashtags(asStringArray(source.hashtags, []));
+  const nextIdeas = asStringArray(source.nextIdeas, []);
+  const coach = asStringArray(source.coach, []);
+  const bestCta = coach[0] || (language === 'pl' ? 'Dodaj CTA: Napisz PLAN i skomentuj.' : language === 'es' ? 'Agrega CTA: comenta PLAN.' : 'Add CTA: comment PLAN.');
 
   return {
     verdict: String(source.verdict || defaultVerdict),
     score: Math.max(0, Math.min(100, Number(source.score) || 75)),
     bestTime: String(source.bestTime || defaultBestTime),
     trend: String(source.trend || ''),
+    performance: {
+      viralPotential: clampScore(performance.viralPotential, clampScore(source.score, 76)),
+      conversionPotential: clampScore(performance.conversionPotential, 72),
+      engagementPotential: clampScore(performance.engagementPotential, 78),
+    },
     content: {
       tiktok: String(content.tiktok || ''),
       shorts: String(content.shorts || ''),
@@ -129,9 +221,19 @@ function normalizePack(raw: unknown, language: AiLanguage): GrowthPack {
       facebook: String(content.facebook || ''),
       x: String(content.x || ''),
     },
-    hashtags: asStringArray(source.hashtags, []),
-    nextIdeas: asStringArray(source.nextIdeas, []),
-    coach: asStringArray(source.coach, []),
+    hashtags,
+    nextIdeas,
+    coach,
+    campaignCalendar: buildCampaignCalendar({
+      days: requestedDays,
+      language,
+      topic: String(source.trend || source.verdict || 'Campaign'),
+      niche: String(source.niche || 'creator'),
+      baseTrend: String(source.trend || ''),
+      baseIdeas: nextIdeas,
+      baseHashtags: hashtags,
+      baseCta: bestCta,
+    }),
   };
 }
 
@@ -256,6 +358,7 @@ function buildPrompt(input: {
   niche: string;
   platform: string;
   language: AiLanguage;
+  campaignLengthDays?: number;
   campaignGoal?: string;
   styleMode?: string;
   styleProfile?: string;
@@ -274,6 +377,11 @@ function buildPrompt(input: {
       score: 0,
       bestTime: 'string',
       trend: 'string',
+      performance: {
+        viralPotential: 0,
+        conversionPotential: 0,
+        engagementPotential: 0,
+      },
       content: {
         tiktok: 'string',
         shorts: 'string',
@@ -288,6 +396,7 @@ function buildPrompt(input: {
     `Topic: ${input.topic}`,
     `Niche: ${input.niche}`,
     `Requested platforms: ${input.platform}`,
+    `Campaign length in days: ${Math.max(1, Math.min(90, Number(input.campaignLengthDays) || 30))}`,
     `Campaign goal: ${input.campaignGoal || 'awareness'}`,
     `Style mode: ${input.styleMode || 'auto'}`,
     `Style profile: ${input.styleProfile || 'high-performance premium social'}`,
@@ -376,6 +485,7 @@ export async function generateGrowthPackFromProvider(input: {
   niche: string;
   platform: string;
   language: AiLanguage;
+  campaignLengthDays?: number;
   openaiApiKey?: string;
   anthropicApiKey?: string;
   campaignGoal?: string;
@@ -391,7 +501,7 @@ export async function generateGrowthPackFromProvider(input: {
   if (openaiApiKey) {
     try {
       const raw = await callOpenAi(openaiApiKey, prompt);
-      return normalizePack(JSON.parse(extractJson(raw)), input.language);
+      return normalizePack(JSON.parse(extractJson(raw)), input.language, input.campaignLengthDays || 30);
     } catch (error) {
       errors.push(error instanceof Error ? error.message : 'OpenAI request failed');
     }
@@ -400,7 +510,7 @@ export async function generateGrowthPackFromProvider(input: {
   if (anthropicApiKey) {
     try {
       const raw = await callAnthropic(anthropicApiKey, prompt);
-      return normalizePack(JSON.parse(extractJson(raw)), input.language);
+      return normalizePack(JSON.parse(extractJson(raw)), input.language, input.campaignLengthDays || 30);
     } catch (error) {
       errors.push(error instanceof Error ? error.message : 'Anthropic request failed');
     }

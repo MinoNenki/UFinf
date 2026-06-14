@@ -90,14 +90,14 @@ export default function Studio() {
       tonePlaceholder: 'Np. premium, nowoczesny', 
       emptyPrompt: 'Wpisz temat, aby wygenerować prompt.',
       presets: ['Miniatura YouTube 16:9', 'Okładka Reels 9:16', 'Post Facebook 1:1', 'Post X 16:9'],
-      videoTitle: 'AI Video Editor',
-      videoSubtitle: 'Wrzuć film, wpisz co chcesz zmienić, a AI automatycznie wyedytuje materiał na potrzeby klienta',
+      videoTitle: 'Video Automation (Coming Soon)',
+      videoSubtitle: 'Modul video jest tymczasowo ukryty. Wroci jako funkcja premium po integracji silnikow generatywnych.',
       uploadLabel: 'Wrzuć film (MP4, WebM)',
       editorPrompt: 'Co chcesz zmienić w tym filmie?',
       editorPlaceholder: 'Np. "Dodaj napisy, zmień tempo do 1.5x, wytnij pierwsze 5 sekund, zmień muzykę na energiczną"',
-      editorGenerate: 'Edytuj wideo',
+      editorGenerate: 'Wkrotce',
       editorResult: 'Edytowane wideo',
-      editorEmptyPrompt: 'Wrzuć film i wpisz instrukcje edycji',
+      editorEmptyPrompt: 'Video editor wraca wkrotce',
       lines: (topic: string, preset: string, tone: string) => [ 
         `Stworz grafikę promocyjną dla tematu: ${topic}.`, 
         `Format: ${preset}.`, 
@@ -142,14 +142,14 @@ export default function Studio() {
       tonePlaceholder: 'E.g. premium, modern', 
       emptyPrompt: 'Enter a topic to generate a prompt.',
       presets: ['YouTube thumbnail 16:9', 'Reels cover 9:16', 'Facebook post 1:1', 'X post 16:9'],
-      videoTitle: 'AI Video Editor',
-      videoSubtitle: 'Upload a video, type what you want to change, and AI will automatically edit it for your client',
+      videoTitle: 'Video Automation (Coming Soon)',
+      videoSubtitle: 'Video module is temporarily hidden and will return as a premium feature after generative engine integrations.',
       uploadLabel: 'Upload video (MP4, WebM)',
       editorPrompt: 'What do you want to change in this video?',
       editorPlaceholder: 'E.g. "Add subtitles, speed up to 1.5x, trim first 5 seconds, change music to upbeat"',
-      editorGenerate: 'Edit video',
+      editorGenerate: 'Coming soon',
       editorResult: 'Edited video',
-      editorEmptyPrompt: 'Upload a video and type editing instructions',
+      editorEmptyPrompt: 'Video editor is coming soon',
       lines: (topic: string, preset: string, tone: string) => [ 
         `Create a promotional graphic for the topic: ${topic}.`, 
         `Format: ${preset}.`, 
@@ -194,14 +194,14 @@ export default function Studio() {
       tonePlaceholder: 'Ej. premium, moderno', 
       emptyPrompt: 'Introduce un tema para generar un prompt.',
       presets: ['Miniatura YouTube 16:9', 'Portada Reels 9:16', 'Post Facebook 1:1', 'Post X 16:9'],
-      videoTitle: 'Editor de Video AI',
-      videoSubtitle: 'Sube un video, escribe qué quieres cambiar, y la IA editará automáticamente el material para tu cliente',
+      videoTitle: 'Video Automation (Coming Soon)',
+      videoSubtitle: 'El modulo de video esta temporalmente oculto y volvera como funcion premium tras integrar motores generativos.',
       uploadLabel: 'Subir video (MP4, WebM)',
       editorPrompt: '¿Qué quieres cambiar en este video?',
       editorPlaceholder: 'Ej. "Agrega subtítulos, aumenta velocidad a 1.5x, corta primeros 5 segundos, cambia música a energética"',
-      editorGenerate: 'Editar video',
+      editorGenerate: 'Proximamente',
       editorResult: 'Video editado',
-      editorEmptyPrompt: 'Sube un video e introduce instrucciones de edición',
+      editorEmptyPrompt: 'El editor de video vuelve pronto',
       lines: (topic: string, preset: string, tone: string) => [ 
         `Crea un gráfico promocional para el tema: ${topic}.`, 
         `Formato: ${preset}.`, 
@@ -237,6 +237,7 @@ export default function Studio() {
   const [videoEditSummary, setVideoEditSummary] = useState<Record<string, unknown> | null>(null);
   const [editedVideoUrl, setEditedVideoUrl] = useState<string | null>(null);
   const [activeVideoJobId, setActiveVideoJobId] = useState<string | null>(null);
+  const videoEditorEnabled = process.env.NEXT_PUBLIC_VIDEO_EDITOR_ENABLED === 'true';
 
   const imagePrompt = useMemo(() => {
     if (!topic.trim()) return copy.emptyPrompt;
@@ -466,6 +467,10 @@ export default function Studio() {
   }
 
   async function editVideo() {
+    if (!videoEditorEnabled) {
+      setVideoEditError(language === 'pl' ? 'Modul video jest obecnie oznaczony jako Coming Soon.' : language === 'es' ? 'El modulo de video esta marcado como Coming Soon.' : 'Video module is marked as Coming Soon.');
+      return;
+    }
     if (!videoFile || !videoEditorPrompt.trim()) return;
     setVideoEditing(true);
     setVideoProgress(0);
@@ -607,8 +612,8 @@ export default function Studio() {
             <button className={`btn btn-ghost btn-sm${activePromptType === 'image' ? ' active' : ''}`} onClick={() => setActivePromptType('image')}>
               <Image size={14} /> {copy.image}
             </button>
-            <button className={`btn btn-ghost btn-sm${activePromptType === 'video' ? ' active' : ''}`} onClick={() => setActivePromptType('video')}>
-              <Video size={14} /> {copy.video}
+            <button className={`btn btn-ghost btn-sm${activePromptType === 'video' ? ' active' : ''}`} onClick={() => setActivePromptType('video')} disabled={!videoEditorEnabled}>
+              <Video size={14} /> {copy.video}{videoEditorEnabled ? '' : ' (Coming Soon)'}
             </button>
           </div>
         </div>
@@ -758,6 +763,11 @@ export default function Studio() {
             <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{copy.videoSubtitle}</p>
           </div>
         </div>
+        {!videoEditorEnabled && (
+          <div className="alert alert-info" style={{ marginBottom: 14 }}>
+            {language === 'pl' ? 'Video jest oznaczone jako Coming Soon. Skupiamy sie teraz na automatyzacji contentu tekstowego i grafice AI.' : language === 'es' ? 'Video esta en Coming Soon. Ahora nos enfocamos en automatizacion de contenido y graficos AI.' : 'Video is marked as Coming Soon. We currently focus on automated content and AI graphics.'}
+          </div>
+        )}
 
         <div className="grid-2" style={{ gap: 20 }}>
           <div>
@@ -792,6 +802,7 @@ export default function Studio() {
                   type="file"
                   accept="video/mp4,video/webm"
                   onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                  disabled={!videoEditorEnabled}
                   style={{ display: 'none' }}
                   id="video-upload"
                 />
@@ -818,7 +829,7 @@ export default function Studio() {
             <button 
               className="btn btn-primary btn-full" 
               onClick={editVideo}
-              disabled={!videoFile || !videoEditorPrompt.trim() || videoEditing}
+              disabled={!videoEditorEnabled || !videoFile || !videoEditorPrompt.trim() || videoEditing}
             >
               <Wand2 size={14} />
               {videoEditing ? (language === 'pl' ? 'Edytuję...' : language === 'es' ? 'Editando...' : 'Editing...') : copy.editorGenerate}

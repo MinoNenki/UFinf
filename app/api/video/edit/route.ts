@@ -62,6 +62,13 @@ function inferOperations(instruction: string) {
 
 export async function POST(req: Request) {
   try {
+    if (process.env.ENABLE_VIDEO_EDITOR !== 'true') {
+      return NextResponse.json(
+        { error: 'Video editor is coming soon. This module is currently disabled.' },
+        { status: 503 }
+      );
+    }
+
     const formData = await req.formData();
     const videoFile = formData.get('video') as File;
     const instruction = formData.get('instruction') as string;

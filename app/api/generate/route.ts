@@ -31,6 +31,7 @@ export async function POST(req: Request) {
   }
 
   const language = String(body.language || 'pl') as 'pl' | 'en' | 'es';
+  const campaignLengthDays = Math.max(1, Math.min(90, Number(body.campaignLengthDays) || 30));
   const campaignGoal = String(body.campaignGoal || 'awareness');
   const styleMode = String(body.styleMode || 'auto');
   const manualStyleHint = String(body.manualStyleHint || '');
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
       platform: promptPreparation.fixedInput.platform,
       niche: promptPreparation.fixedInput.niche,
       language,
+      campaignLengthDays,
       openaiApiKey: settings.apiKeys.openaiApiKey,
       anthropicApiKey: settings.apiKeys.anthropicApiKey,
       campaignGoal: promptPreparation.fixedInput.campaignGoal,

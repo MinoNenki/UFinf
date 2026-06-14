@@ -95,23 +95,15 @@ test('content factory strategy panel and DOM options work', async ({ page }) => 
             editCadence: 'Fast cadence 0.8-1.4s',
           },
         },
-        promptQuality: {
-          score: 92,
-          issues: [
-            {
-              key: 'topic.too_short',
-              message: 'Topic is slightly short for premium depth.',
-              penalty: 8,
-              autoFix: 'Expanded topic with audience and CTA context.',
-            },
-          ],
-          appliedAutoFixes: ['Expanded short topic with strategic execution constraints.'],
-        },
         result: {
           verdict: 'READY TO PUBLISH',
-          score: 89,
           bestTime: '6:00 PM-8:00 PM',
           trend: 'Proof-first authority short videos',
+          performance: {
+            viralPotential: 85,
+            conversionPotential: 79,
+            engagementPotential: 82,
+          },
           content: {
             tiktok: 'TikTok copy',
             shorts: 'Shorts copy',
@@ -122,6 +114,19 @@ test('content factory strategy panel and DOM options work', async ({ page }) => 
           hashtags: ['#growth', '#finance'],
           nextIdeas: ['Idea one', 'Idea two'],
           coach: ['Action one', 'Action two'],
+          campaignCalendar: [
+            {
+              day: 1,
+              title: 'Day 1: Authority Launch',
+              publishWindow: '6:00 PM-8:00 PM',
+              tiktok: 'Tiktok day 1',
+              shorts: 'Shorts day 1',
+              reels: 'Reels day 1',
+              description: 'Launch authority narrative',
+              hashtags: ['#growth'],
+              cta: 'Comment PLAN',
+            },
+          ],
         },
       }),
     });
@@ -129,8 +134,7 @@ test('content factory strategy panel and DOM options work', async ({ page }) => 
 
   await page.locator('[data-testid="cf-generate"]').click();
 
-  await expect(page.locator('[data-testid="cf-prompt-quality"]')).toBeVisible();
-  await expect(page.getByText('Score: 92/100')).toBeVisible();
+  await expect(page.getByText('Viral Potential: 85%')).toBeVisible();
   await expect(page.getByText('Campaign strategy engine')).toBeVisible();
   await expect(page.getByText('Hook formula: Pain hook for leads')).toBeVisible();
 
@@ -139,6 +143,11 @@ test('content factory strategy panel and DOM options work', async ({ page }) => 
 
   await page.locator('.tabs').getByRole('button', { name: 'Next ideas' }).click();
   await expect(page.getByText('Idea one')).toBeVisible();
+
+  await page.locator('.tabs').getByRole('button', { name: '30-day Calendar' }).click();
+  await expect(page.getByText('Day 1: Authority Launch')).toBeVisible();
+  await expect(page.locator('[data-testid="cf-export-calendar-csv"]')).toBeVisible();
+  await expect(page.locator('[data-testid="cf-export-calendar-notion"]')).toBeVisible();
 
   await page.getByRole('button', { name: 'YouTube Shorts' }).click();
   await expect(page.locator('.studio-output')).toContainText('Shorts copy');

@@ -23,6 +23,7 @@ import ContentBrainV2 from './ContentBrainV2';
 import AdminLogin from './AdminLogin';
 import LanguageSwitcher from './LanguageSwitcher';
 import AccountPanel from './AccountPanel_new';
+import AssetsStudio from './AssetsStudio';
 
 const NAV_ITEMS = [
   { path: '/dashboard', key: 'dashboard', icon: LayoutDashboard, section: 'main' },
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { path: '/dashboard/competition', key: 'competition', icon: Users, section: 'main' },
   { path: '/dashboard/coach', key: 'coach', icon: Brain, section: 'main' },
   { path: '/dashboard/inbox', key: 'inbox', icon: Inbox, section: 'tools', badge: 3 },
+  { path: '/dashboard/assets', key: 'assets', icon: Sparkles, section: 'tools' },
   { path: '/dashboard/studio', key: 'studio', icon: Palette, section: 'tools' },
   { path: '/dashboard/brain', key: 'brain', icon: TrendingUp, section: 'tools' },
   { path: '/dashboard/revenue', key: 'revenue', icon: DollarSign, section: 'tools' },
@@ -43,8 +45,8 @@ const NAV_ITEMS = [
 const COPY = {
   pl: {
     labels: {
-      dashboard: 'Panel glowny', factory: 'Fabryka tresci', publish: 'Publikacja 1 kliknieciem', trends: 'Radar trendow', competition: 'Analiza konkurencji',
-      coach: 'Asystent wzrostu AI', inbox: 'Smart Inbox', studio: 'Studio AI', brain: 'Mózg tresci AI', revenue: 'Przychody AI',
+      dashboard: 'Panel glowny', factory: 'AI Growth OS', publish: 'Publikacja 1 kliknieciem', trends: 'Radar trendow', competition: 'Analiza konkurencji',
+      coach: 'Asystent wzrostu AI', inbox: 'Smart Inbox', assets: 'AI Assets Studio', studio: 'Studio AI (grafiki)', brain: 'Mózg tresci AI', revenue: 'Przychody AI',
       account: 'Moje konto', admin: 'Panel admina', settings: 'Ustawienia',
     },
     sections: { main: 'Glowne', tools: 'Narzedzia', account: 'Konto' },
@@ -63,8 +65,8 @@ const COPY = {
   },
   en: {
     labels: {
-      dashboard: 'Dashboard', factory: 'Content Factory', publish: 'One Click Publish', trends: 'Trend Radar', competition: 'AI Competition',
-      coach: 'Growth Coach', inbox: 'Smart Inbox', studio: 'AI Studio', brain: 'AI Content Brain', revenue: 'Revenue AI',
+      dashboard: 'Dashboard', factory: 'AI Growth OS', publish: 'One Click Publish', trends: 'Trend Radar', competition: 'AI Competition',
+      coach: 'Growth Coach', inbox: 'Smart Inbox', assets: 'AI Assets Studio', studio: 'AI Studio (images)', brain: 'AI Content Brain', revenue: 'Revenue AI',
       account: 'My account', admin: 'Admin panel', settings: 'Settings',
     },
     sections: { main: 'Main', tools: 'Tools', account: 'Account' },
@@ -83,8 +85,8 @@ const COPY = {
   },
   es: {
     labels: {
-      dashboard: 'Dashboard', factory: 'Fabrica de contenido', publish: 'Publicacion en un clic', trends: 'Radar de tendencias', competition: 'Competencia AI',
-      coach: 'Growth Coach', inbox: 'Bandeja inteligente', studio: 'AI Studio', brain: 'AI Content Brain', revenue: 'Ingresos AI',
+      dashboard: 'Dashboard', factory: 'AI Growth OS', publish: 'Publicacion en un clic', trends: 'Radar de tendencias', competition: 'Competencia AI',
+      coach: 'Growth Coach', inbox: 'Bandeja inteligente', assets: 'AI Assets Studio', studio: 'AI Studio (imagenes)', brain: 'AI Content Brain', revenue: 'Ingresos AI',
       account: 'Mi cuenta', admin: 'Panel admin', settings: 'Ajustes',
     },
     sections: { main: 'Principal', tools: 'Herramientas', account: 'Cuenta' },
@@ -111,6 +113,7 @@ function renderPage(path: string, isAdmin: boolean, adminRole: string | undefine
   if (path === '/dashboard/competition') return <Competition />;
   if (path === '/dashboard/coach') return <Coach />;
   if (path === '/dashboard/inbox') return <InboxPage />;
+  if (path === '/dashboard/assets') return <AssetsStudio />;
   if (path === '/dashboard/studio') return <Studio />;
   if (path === '/dashboard/brain') return <ContentBrainV2 />;
   if (path === '/dashboard/revenue') return <Revenue />;

@@ -40,16 +40,6 @@ const SHORT_VIDEO_TEMPLATES = [
 
 type ContentResult = {
   guard?: { estimatedCost: number; allowed: boolean };
-  promptQuality?: {
-    score: number;
-    issues: Array<{
-      key: string;
-      message: string;
-      penalty: number;
-      autoFix: string;
-    }>;
-    appliedAutoFixes: string[];
-  };
   strategy?: {
     goal: string;
     styleMode: string;
@@ -65,13 +55,28 @@ type ContentResult = {
   };
   result?: {
     verdict: string;
-    score: number;
     bestTime: string;
     trend: string;
+    performance?: {
+      viralPotential: number;
+      conversionPotential: number;
+      engagementPotential: number;
+    };
     content: Record<string, string>;
     hashtags: string[];
     nextIdeas: string[];
     coach: string[];
+    campaignCalendar?: Array<{
+      day: number;
+      title: string;
+      publishWindow: string;
+      tiktok: string;
+      shorts: string;
+      reels: string;
+      description: string;
+      hashtags: string[];
+      cta: string;
+    }>;
   };
   error?: string;
 };
@@ -80,9 +85,9 @@ export default function ContentFactory() {
   const { language } = useI18n();
   const copy = byLanguage(language, {
     pl: {
-      title: 'Content Factory',
-      subtitle: 'Jeden temat -> premium pakiet tresci gotowy do publikacji globalnej',
-      steps: ['Wpisz temat', 'Sprawdz koszt', 'Odbierz tresci'],
+      title: 'AI Growth OS',
+      subtitle: '1 klikniecie -> 30 dni gotowego contentu pod TikTok, Shorts i Reels',
+      steps: ['Wpisz temat', 'Wybierz zakres kampanii', 'Odbierz gotowy plan'],
       config: 'Konfiguracja tresci',
       topic: 'Temat / link / opis / pomysl na film',
       placeholder: 'np. Jak zbudowac globalna marke creator-first i zwiekszyc konwersje...',
@@ -99,7 +104,9 @@ export default function ContentFactory() {
       platforms: 'Platformy',
       budget: 'Szacowany koszt',
       limit: 'Gotowe do wygenerowania',
-      generate: 'Wygeneruj Pakiet Tresci',
+      generate: 'Wygeneruj Content Pack',
+      generateFullCampaign: 'Generate Full Campaign (30 dni)',
+      generateVideo: 'Generate Video (Coming Soon)',
       generating: 'Generuje pakiet...',
       emptyTitle: 'Wyniki pojawia sie tutaj',
       emptyText: 'Wpisz temat albo dodaj pliki zrodlowe i kliknij przycisk generowania.',
@@ -110,6 +117,11 @@ export default function ContentFactory() {
       removeFile: 'Usun plik',
       bestTime: 'Najlepszy czas',
       coach: 'Growth Coach',
+      calendar: 'Kalendarz 30 dni',
+      businessSignals: 'Sygnaly biznesowe',
+      viralPotential: 'Viral Potential',
+      conversionPotential: 'Conversion Potential',
+      engagementPotential: 'Engagement Potential',
       ideas: 'Kolejne pomysly',
       planTitle: 'PLAN DZIALANIA',
       ideasTitle: 'KOLEJNE POMYSLY',
@@ -124,15 +136,12 @@ export default function ContentFactory() {
       strategyCta: 'Formula CTA',
       strategyVisual: 'Kierunek wizualny',
       strategyCadence: 'Tempo montazu',
-      promptRankTitle: 'Ranking jakosci promptu',
-      promptScore: 'Wynik',
-      promptFixes: 'Auto-fix',
-      promptIssues: 'Wykryte problemy',
+      campaignLength: 'Dlugosc kampanii',
     },
     en: {
-      title: 'Content Factory',
-      subtitle: 'One topic -> premium content package ready for global distribution',
-      steps: ['Enter topic', 'Check cost', 'Collect content'],
+      title: 'AI Growth OS',
+      subtitle: '1 click -> 30 days of production-ready content for TikTok, Shorts, and Reels',
+      steps: ['Enter topic', 'Choose campaign scope', 'Receive execution plan'],
       config: 'Content setup',
       topic: 'Topic / link / description / video idea',
       placeholder: 'e.g. How to build a global creator-first brand and increase conversion...',
@@ -150,6 +159,8 @@ export default function ContentFactory() {
       budget: 'Estimated cost',
       limit: 'Ready to generate',
       generate: 'Generate Content Pack',
+      generateFullCampaign: 'Generate Full Campaign (30 days)',
+      generateVideo: 'Generate Video (Coming Soon)',
       generating: 'Generating pack...',
       emptyTitle: 'Results will appear here',
       emptyText: 'Enter a topic or add source files and start generation.',
@@ -160,6 +171,11 @@ export default function ContentFactory() {
       removeFile: 'Remove file',
       bestTime: 'Best time',
       coach: 'Growth Coach',
+      calendar: '30-day Calendar',
+      businessSignals: 'Business signals',
+      viralPotential: 'Viral Potential',
+      conversionPotential: 'Conversion Potential',
+      engagementPotential: 'Engagement Potential',
       ideas: 'Next ideas',
       planTitle: 'ACTION PLAN',
       ideasTitle: 'NEXT IDEAS',
@@ -174,15 +190,12 @@ export default function ContentFactory() {
       strategyCta: 'CTA formula',
       strategyVisual: 'Visual direction',
       strategyCadence: 'Edit cadence',
-      promptRankTitle: 'Prompt quality ranking',
-      promptScore: 'Score',
-      promptFixes: 'Auto-fix',
-      promptIssues: 'Detected issues',
+      campaignLength: 'Campaign length',
     },
     es: {
-      title: 'Fabrica de contenido',
-      subtitle: 'Un tema -> paquete premium listo para distribucion global',
-      steps: ['Introduce tema', 'Revisa coste', 'Recoge contenido'],
+      title: 'AI Growth OS',
+      subtitle: '1 clic -> 30 dias de contenido listo para TikTok, Shorts y Reels',
+      steps: ['Introduce tema', 'Define alcance', 'Recibe plan ejecutable'],
       config: 'Configuracion de contenido',
       topic: 'Tema / link / descripcion / idea de video',
       placeholder: 'ej. Como construir una marca global creator-first y aumentar conversion...',
@@ -200,6 +213,8 @@ export default function ContentFactory() {
       budget: 'Coste estimado',
       limit: 'Listo para generar',
       generate: 'Generar paquete de contenido',
+      generateFullCampaign: 'Generate Full Campaign (30 dias)',
+      generateVideo: 'Generate Video (Coming Soon)',
       generating: 'Generando paquete...',
       emptyTitle: 'Los resultados apareceran aqui',
       emptyText: 'Introduce un tema o agrega archivos fuente y lanza la generacion.',
@@ -210,6 +225,11 @@ export default function ContentFactory() {
       removeFile: 'Quitar archivo',
       bestTime: 'Mejor hora',
       coach: 'Growth Coach',
+      calendar: 'Calendario 30 dias',
+      businessSignals: 'Senales de negocio',
+      viralPotential: 'Viral Potential',
+      conversionPotential: 'Conversion Potential',
+      engagementPotential: 'Engagement Potential',
       ideas: 'Siguientes ideas',
       planTitle: 'PLAN DE ACCION',
       ideasTitle: 'SIGUIENTES IDEAS',
@@ -224,10 +244,7 @@ export default function ContentFactory() {
       strategyCta: 'Formula de CTA',
       strategyVisual: 'Direccion visual',
       strategyCadence: 'Cadencia de edicion',
-      promptRankTitle: 'Ranking de calidad del prompt',
-      promptScore: 'Puntuacion',
-      promptFixes: 'Auto-fix',
-      promptIssues: 'Problemas detectados',
+      campaignLength: 'Duracion de campana',
     },
   });
 
@@ -239,6 +256,7 @@ export default function ContentFactory() {
   const [styleMode, setStyleMode] = useState<'auto' | 'manual'>('auto');
   const [manualStyleHint, setManualStyleHint] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['tiktok', 'youtube', 'instagram']);
+  const [campaignLengthDays, setCampaignLengthDays] = useState(30);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ContentResult | null>(null);
   const [activeTab, setActiveTab] = useState('tiktok');
@@ -268,7 +286,7 @@ export default function ContentFactory() {
     setManualStyleHint(template.styleHint);
   }
 
-  async function generate() {
+  async function generate(nextTab?: string, forcedCampaignLengthDays?: number) {
     if (!topic.trim() && attachments.length === 0) return;
     setLoading(true);
     setResult(null);
@@ -285,6 +303,7 @@ export default function ContentFactory() {
           platform: selectedPlatforms.join(','),
           language,
           attachmentContext,
+          campaignLengthDays: forcedCampaignLengthDays || campaignLengthDays,
           campaignGoal,
           styleMode,
           manualStyleHint,
@@ -300,7 +319,7 @@ export default function ContentFactory() {
       setResult(data);
       if (data.result) {
         setStep(3);
-        setActiveTab(selectedPlatforms[0] || 'tiktok');
+        setActiveTab(nextTab || selectedPlatforms[0] || 'tiktok');
       }
     } catch {
       setResult({ error: copy.error });
@@ -330,6 +349,62 @@ export default function ContentFactory() {
     navigator.clipboard.writeText(text).catch(() => {});
     setCopied(key);
     setTimeout(() => setCopied(null), 2000);
+  }
+
+  function exportCalendarCsv() {
+    const rows = (result?.result?.campaignCalendar || []).slice(0, campaignLengthDays);
+    if (!rows.length) return;
+
+    const header = ['Day', 'Title', 'Publish Window', 'TikTok', 'Shorts', 'Reels', 'Description', 'Hashtags', 'CTA'];
+    const escapeCsv = (value: string) => `"${String(value || '').replace(/"/g, '""')}"`;
+    const lines = [
+      header.join(','),
+      ...rows.map((entry) => [
+        String(entry.day),
+        entry.title,
+        entry.publishWindow,
+        entry.tiktok,
+        entry.shorts,
+        entry.reels,
+        entry.description,
+        (entry.hashtags || []).join(' '),
+        entry.cta,
+      ].map(escapeCsv).join(',')),
+    ];
+
+    const csv = lines.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `campaign-scheduler-${campaignLengthDays}d.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportCalendarNotion() {
+    const rows = (result?.result?.campaignCalendar || []).slice(0, campaignLengthDays);
+    if (!rows.length) return;
+
+    const markdown = [
+      '# 30-day Scheduler Export',
+      '',
+      '| Day | Title | Publish Window | TikTok | Shorts | Reels | CTA |',
+      '| --- | --- | --- | --- | --- | --- | --- |',
+      ...rows.map((entry) => `| ${entry.day} | ${entry.title.replace(/\|/g, '/')} | ${entry.publishWindow.replace(/\|/g, '/')} | ${entry.tiktok.replace(/\|/g, '/')} | ${entry.shorts.replace(/\|/g, '/')} | ${entry.reels.replace(/\|/g, '/')} | ${entry.cta.replace(/\|/g, '/')} |`),
+    ].join('\n');
+
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `campaign-scheduler-${campaignLengthDays}d-notion.md`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
   }
 
   const PLATFORM_KEYS: Record<string, string> = {
@@ -430,6 +505,15 @@ export default function ContentFactory() {
           <div className="form-group"><label className="form-label">{copy.plan}</label><select value={plan} onChange={(e) => setPlan(e.target.value)}><option value="free">Free (3/dzien)</option><option value="pro">Pro (40/dzien)</option><option value="premium_plus">Premium Plus (120/dzien)</option><option value="expert">Expert (360/dzien)</option></select></div>
 
           <div className="form-group">
+            <label className="form-label">{copy.campaignLength}</label>
+            <select value={campaignLengthDays} onChange={(e) => setCampaignLengthDays(Number(e.target.value) || 30)}>
+              <option value={7}>7 dni</option>
+              <option value={14}>14 dni</option>
+              <option value={30}>30 dni</option>
+            </select>
+          </div>
+
+          <div className="form-group">
             <label className="form-label">{copy.platforms}</label>
             <div className="checkbox-group">
               {PLATFORMS.map((p) => (
@@ -449,9 +533,20 @@ export default function ContentFactory() {
             </div>
           </div>
 
-          <button data-testid="cf-generate" className="btn btn-primary btn-full" onClick={generate} disabled={loading || (!topic.trim() && attachments.length === 0) || selectedPlatforms.length === 0} style={{ marginTop: 12 }}>
-            {loading ? <><Loader size={15} style={{ animation: 'spin .7s linear infinite' }} /> {copy.generating}</> : copy.generate}
-          </button>
+          <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+            <button data-testid="cf-generate" className="btn btn-primary btn-full" onClick={() => void generate()} disabled={loading || (!topic.trim() && attachments.length === 0) || selectedPlatforms.length === 0}>
+              {loading ? <><Loader size={15} style={{ animation: 'spin .7s linear infinite' }} /> {copy.generating}</> : copy.generate}
+            </button>
+            <button type="button" className="btn btn-ghost btn-full" onClick={() => {
+              setCampaignLengthDays(30);
+              void generate('calendar', 30);
+            }} disabled={loading || (!topic.trim() && attachments.length === 0) || selectedPlatforms.length === 0}>
+              {copy.generateFullCampaign}
+            </button>
+            <button type="button" className="btn btn-ghost btn-full" disabled>
+              {copy.generateVideo}
+            </button>
+          </div>
 
           {result?.error && <div className="alert alert-error" style={{ marginTop: 12 }}>{result.error}</div>}
         </div>
@@ -475,37 +570,6 @@ export default function ContentFactory() {
 
           {!loading && result?.result && (
             <div className="animate-in">
-              {result.promptQuality && (
-                <div data-testid="cf-prompt-quality" className="card" style={{ marginBottom: 14, background: 'rgba(255,255,255,.03)' }}>
-                  <h4 style={{ fontSize: 14, marginBottom: 8 }}>{copy.promptRankTitle}</h4>
-                  <div style={{ fontSize: 12, marginBottom: 8 }}>
-                    <strong>{copy.promptScore}:</strong> {result.promptQuality.score}/100
-                  </div>
-                  {result.promptQuality.issues.length > 0 && (
-                    <div style={{ marginBottom: 8 }}>
-                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>{copy.promptIssues}</div>
-                      <div style={{ display: 'grid', gap: 6 }}>
-                        {result.promptQuality.issues.map((issue) => (
-                          <div key={issue.key} style={{ fontSize: 12 }}>
-                            - {issue.message} (-{issue.penalty})
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {result.promptQuality.appliedAutoFixes.length > 0 && (
-                    <div>
-                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>{copy.promptFixes}</div>
-                      <div style={{ display: 'grid', gap: 6 }}>
-                        {result.promptQuality.appliedAutoFixes.map((fix, idx) => (
-                          <div key={`${fix}-${idx}`} style={{ fontSize: 12 }}>- {fix}</div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
               {result.strategy && (
                 <div className="card" style={{ marginBottom: 14, background: 'rgba(255,255,255,.03)' }}>
                   <h4 style={{ fontSize: 14, marginBottom: 8 }}>{copy.strategyTitle}</h4>
@@ -524,7 +588,12 @@ export default function ContentFactory() {
                   <span className="verdict">{result.result.verdict}</span>
                   <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{copy.bestTime}: {result.result.bestTime}</div>
                 </div>
-                <div className="score">{result.result.score}/100</div>
+                <div style={{ display: 'grid', gap: 4, textAlign: 'right' }}>
+                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>{copy.businessSignals}</div>
+                  <div style={{ fontSize: 12 }}><strong>{copy.viralPotential}:</strong> {result.result.performance?.viralPotential ?? 76}%</div>
+                  <div style={{ fontSize: 12 }}><strong>{copy.conversionPotential}:</strong> {result.result.performance?.conversionPotential ?? 72}%</div>
+                  <div style={{ fontSize: 12 }}><strong>{copy.engagementPotential}:</strong> {result.result.performance?.engagementPotential ?? 78}%</div>
+                </div>
               </div>
 
               <div className="tabs" style={{ marginBottom: 16 }}>
@@ -535,6 +604,7 @@ export default function ContentFactory() {
                 ))}
                 <button className={`tab-btn${activeTab === 'coach' ? ' active' : ''}`} onClick={() => setActiveTab('coach')}>{copy.coach}</button>
                 <button className={`tab-btn${activeTab === 'ideas' ? ' active' : ''}`} onClick={() => setActiveTab('ideas')}>{copy.ideas}</button>
+                <button className={`tab-btn${activeTab === 'calendar' ? ' active' : ''}`} onClick={() => setActiveTab('calendar')}>{copy.calendar}</button>
               </div>
 
               {activeTab === 'coach' && (
@@ -560,7 +630,26 @@ export default function ContentFactory() {
                 </div>
               )}
 
-              {!['coach', 'ideas'].includes(activeTab) && (
+              {activeTab === 'calendar' && (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <button type="button" data-testid="cf-export-calendar-csv" className="btn btn-ghost btn-sm" onClick={exportCalendarCsv}>Export CSV</button>
+                    <button type="button" data-testid="cf-export-calendar-notion" className="btn btn-ghost btn-sm" onClick={exportCalendarNotion}>Export Notion-ready</button>
+                  </div>
+                  {(result.result.campaignCalendar || []).slice(0, campaignLengthDays).map((entry) => (
+                    <div key={`day-${entry.day}`} style={{ padding: '8px 12px', background: 'rgba(255,255,255,.04)', borderRadius: 10, marginBottom: 8, fontSize: 13 }}>
+                      <div style={{ fontWeight: 700, marginBottom: 4 }}>{entry.title}</div>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 4 }}>{copy.bestTime}: {entry.publishWindow}</div>
+                      <div style={{ fontSize: 12, marginBottom: 2 }}><strong>TikTok:</strong> {entry.tiktok}</div>
+                      <div style={{ fontSize: 12, marginBottom: 2 }}><strong>Shorts:</strong> {entry.shorts}</div>
+                      <div style={{ fontSize: 12, marginBottom: 2 }}><strong>Reels:</strong> {entry.reels}</div>
+                      <div style={{ fontSize: 12 }}><strong>CTA:</strong> {entry.cta}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!['coach', 'ideas', 'calendar'].includes(activeTab) && (
                 <div>
                   <div className="flex items-center justify-between mb-8">
                     <h4 style={{ fontSize: 13, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
