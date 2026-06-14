@@ -42,7 +42,9 @@ export default function DashboardHomeLocalized() {
 
   useEffect(() => {
     let active = true;
-    fetch('/api/usage/topup')
+    const effectiveEmail = user?.email || (typeof window !== 'undefined' ? localStorage.getItem('usinf_signup_email') || '' : '');
+    const topupUrl = effectiveEmail ? `/api/usage/topup?email=${encodeURIComponent(effectiveEmail)}` : '/api/usage/topup';
+    fetch(topupUrl)
       .then((res) => res.json())
       .then((data) => {
         if (!active) return;
@@ -55,7 +57,7 @@ export default function DashboardHomeLocalized() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user?.email]);
 
   return (
     <div className="animate-in">

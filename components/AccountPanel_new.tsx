@@ -91,7 +91,11 @@ export default function AccountPanel() {
 
   useEffect(() => {
     let active = true;
-    fetch('/api/usage/topup')
+    const savedEmail = localStorage.getItem('usinf_signup_email') || '';
+    const effectiveEmail = user?.email || savedEmail;
+    const topupUrl = effectiveEmail ? `/api/usage/topup?email=${encodeURIComponent(effectiveEmail)}` : '/api/usage/topup';
+
+    fetch(topupUrl)
       .then((res) => res.json())
       .then((data) => {
         if (!active) return;
@@ -104,7 +108,6 @@ export default function AccountPanel() {
       });
 
     const savedName = localStorage.getItem('usinf_signup_name') || '';
-    const savedEmail = localStorage.getItem('usinf_signup_email') || '';
     if (savedName) setSignupName(savedName);
     if (savedEmail) setSignupEmail(savedEmail);
 
@@ -123,7 +126,7 @@ export default function AccountPanel() {
     return () => {
       active = false;
     };
-  }, [language]);
+  }, [language, user?.email]);
 
   function quickRegister() {
     const name = signupName.trim();
@@ -143,7 +146,7 @@ export default function AccountPanel() {
     setTopUpLoadingId(packId);
     setTopUpMessage('');
     try {
-      const customerEmail = localStorage.getItem('usinf_signup_email') || '';
+      const customerEmail = user?.email || localStorage.getItem('usinf_signup_email') || '';
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

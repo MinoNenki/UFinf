@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Clapperboard, ShieldCheck, Copy, Check, Loader, Paperclip, X, WandSparkles } from 'lucide-react';
 import { buildAttachmentContext } from '@/lib/attachmentContext';
 import { byLanguage, useI18n } from '@/lib/i18n';
+import { useAuth } from '@/lib/authContext';
 
 const PLATFORMS = [
   { id: 'tiktok', label: 'TikTok', cls: 'plat-tiktok' },
@@ -83,6 +84,7 @@ type ContentResult = {
 
 export default function ContentFactory() {
   const { language } = useI18n();
+  const { user } = useAuth();
   const copy = byLanguage(language, {
     pl: {
       title: 'AI Growth OS',
@@ -293,6 +295,7 @@ export default function ContentFactory() {
     setStep(2);
     try {
       const attachmentContext = await buildAttachmentContext(attachments);
+      const customerEmail = user?.email || (typeof window !== 'undefined' ? localStorage.getItem('usinf_signup_email') || '' : '');
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -307,6 +310,7 @@ export default function ContentFactory() {
           campaignGoal,
           styleMode,
           manualStyleHint,
+          customerEmail,
         }),
       });
       const raw = await res.text();

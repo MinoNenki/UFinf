@@ -77,9 +77,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const packId = asTopUpPackId(session.metadata?.packId);
     if (!packId) return;
 
+    const email = readEmailFromSession(session);
+    if (!email) return;
+
     await fulfillTopUpCheckout(
       session.id,
       packId,
+      email,
       typeof session.amount_total === 'number' ? session.amount_total / 100 : undefined,
     );
     return;

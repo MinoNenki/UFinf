@@ -6,8 +6,10 @@ function isTopUpPackId(value: unknown): value is TopUpPackId {
   return value === 'boost_25' || value === 'boost_75' || value === 'boost_200';
 }
 
-export async function GET() {
-  const usage = await usageSnapshot();
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const customerEmail = searchParams.get('email') || '';
+  const usage = await usageSnapshot(customerEmail);
   return NextResponse.json({
     packs: Object.values(TOP_UP_PACKS),
     usage,
@@ -17,6 +19,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const packId = body?.packId;
+  const customerEmail = String(body?.customerEmail || '').trim().toLowerCase();
 
   if (!isTopUpPackId(packId)) {
     return NextResponse.json(
@@ -27,7 +30,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const result = await purchaseTopUp(packId);
+  const result = await purchaseTopUp(packId, customerEmail);
   if (!result.ok) {
     return NextResponse.json({ error: result.message, usage: result.usage }, { status: 400 });
   }

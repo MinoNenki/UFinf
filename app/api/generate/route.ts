@@ -3,7 +3,7 @@ import { budgetGuard } from '@/lib/budget';
 import type { PlanKey } from '@/lib/settings';
 import { generateGrowthPackFromProvider, rankAndAutoFixPromptInput } from '@/lib/server/aiProvider';
 import { readSettings } from '@/lib/server/settingsStore';
-import { reserveUsage } from '@/lib/server/usageStore';
+import { reserveUsage, resolveEffectivePlan } from '@/lib/server/usageStore';
 import { buildOneClickHybridPlan } from '@/lib/server/hybridEngine';
 import { ingestBrainEvents } from '@/lib/server/contentBrainStore';
 import { resolveCampaignStrategy } from '@/lib/server/campaignStrategy';
@@ -12,7 +12,10 @@ import { getClientIp } from '@/lib/server/security/requestMeta';
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
-  const plan = (body.plan || 'free') as PlanKey;
+  const requestedPlan = (body.plan || 'free') as PlanKey;
+  const customerEmail = String(body.customerEmail || '').trim().toLowerCase();
+  const access = await resolveEffectivePlan(requestedPlan, customerEmail);
+  const plan = access.effectivePlan;
   const ip = getClientIp(req);
   const rl = await consumeRateLimit({
     bucket: 'generate',
@@ -38,7 +41,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: guard.message, guard }, { status: 402 });
   }
 
-  const usageReservation = await reserveUsage(plan, guard.estimatedCost, settings.antiLoss);
+  const usageReservation = await reserveUsage(plan, guard.estimatedCost, settings.antiLoss, customerEmail);
   if (!usageReservation.allowed) {
     return NextResponse.json({
       error: usageReservation.message,
@@ -111,5 +114,6 @@ export async function POST(req: Request) {
     mode: 'real_ai',
     strategy,
     promptQuality: promptPreparation.quality,
+    access,
   });
 }

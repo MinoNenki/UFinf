@@ -9,6 +9,7 @@ type TopUpPurchase = {
   generations: number;
   amountUsd: number;
   purchasedAt: string;
+  email?: string;
 };
 
 type UsageState = {
@@ -16,6 +17,7 @@ type UsageState = {
   globalSpentUsd: number;
   counts: Record<PlanKey, number>;
   topUpGenerationsRemaining: number;
+  topUpGenerationsByEmail: Record<string, number>;
   topUpPurchases: TopUpPurchase[];
   fulfilledStripeSessions: string[];
   subscriptionEntitlements: Record<string, SubscriptionEntitlement>;
@@ -51,10 +53,26 @@ function defaultUsage(): UsageState {
       expert: 0,
     },
     topUpGenerationsRemaining: 0,
+    topUpGenerationsByEmail: {},
     topUpPurchases: [],
     fulfilledStripeSessions: [],
     subscriptionEntitlements: {},
   };
+}
+
+function normalizeEmail(email: string | undefined | null) {
+  return (email || '').trim().toLowerCase();
+}
+
+function planRank(plan: PlanKey) {
+  if (plan === 'expert') return 3;
+  if (plan === 'premium_plus') return 2;
+  if (plan === 'pro') return 1;
+  return 0;
+}
+
+function subscriptionIsActive(status: SubscriptionEntitlement['status']) {
+  return status === 'active' || status === 'trialing';
 }
 
 function planDailyLimit(plan: PlanKey, antiLoss: AntiLossSettings) {
@@ -80,6 +98,9 @@ async function readUsage(): Promise<UsageState> {
       topUpGenerationsRemaining: Number.isFinite(Number(parsed.topUpGenerationsRemaining))
         ? Number(parsed.topUpGenerationsRemaining)
         : 0,
+      topUpGenerationsByEmail: typeof parsed.topUpGenerationsByEmail === 'object' && parsed.topUpGenerationsByEmail !== null
+        ? parsed.topUpGenerationsByEmail as UsageState['topUpGenerationsByEmail']
+        : {},
       fulfilledStripeSessions: Array.isArray(parsed.fulfilledStripeSessions) ? parsed.fulfilledStripeSessions : [],
       subscriptionEntitlements: typeof parsed.subscriptionEntitlements === 'object' && parsed.subscriptionEntitlements !== null
         ? parsed.subscriptionEntitlements as UsageState['subscriptionEntitlements']
@@ -90,6 +111,7 @@ async function readUsage(): Promise<UsageState> {
       return {
         ...base,
         topUpGenerationsRemaining: merged.topUpGenerationsRemaining,
+        topUpGenerationsByEmail: merged.topUpGenerationsByEmail,
         topUpPurchases: merged.topUpPurchases,
         fulfilledStripeSessions: merged.fulfilledStripeSessions,
         subscriptionEntitlements: merged.subscriptionEntitlements,
@@ -113,6 +135,9 @@ async function readUsage(): Promise<UsageState> {
         topUpGenerationsRemaining: Number.isFinite(Number(legacyParsed.topUpGenerationsRemaining))
           ? Number(legacyParsed.topUpGenerationsRemaining)
           : 0,
+        topUpGenerationsByEmail: typeof legacyParsed.topUpGenerationsByEmail === 'object' && legacyParsed.topUpGenerationsByEmail !== null
+          ? legacyParsed.topUpGenerationsByEmail as UsageState['topUpGenerationsByEmail']
+          : {},
         fulfilledStripeSessions: Array.isArray(legacyParsed.fulfilledStripeSessions) ? legacyParsed.fulfilledStripeSessions : [],
         subscriptionEntitlements: typeof legacyParsed.subscriptionEntitlements === 'object' && legacyParsed.subscriptionEntitlements !== null
           ? legacyParsed.subscriptionEntitlements as UsageState['subscriptionEntitlements']
@@ -123,6 +148,7 @@ async function readUsage(): Promise<UsageState> {
         : {
             ...base,
             topUpGenerationsRemaining: seeded.topUpGenerationsRemaining,
+            topUpGenerationsByEmail: seeded.topUpGenerationsByEmail,
             topUpPurchases: seeded.topUpPurchases,
             fulfilledStripeSessions: seeded.fulfilledStripeSessions,
             subscriptionEntitlements: seeded.subscriptionEntitlements,
@@ -137,6 +163,7 @@ async function readUsage(): Promise<UsageState> {
         : {
             ...defaultUsage(),
             topUpGenerationsRemaining: memoryUsageState.topUpGenerationsRemaining,
+            topUpGenerationsByEmail: memoryUsageState.topUpGenerationsByEmail,
             topUpPurchases: memoryUsageState.topUpPurchases,
             fulfilledStripeSessions: memoryUsageState.fulfilledStripeSessions,
             subscriptionEntitlements: memoryUsageState.subscriptionEntitlements,
@@ -156,11 +183,29 @@ async function writeUsage(state: UsageState) {
   }
 }
 
-export async function reserveUsage(plan: PlanKey, estimatedCostUsd: number, antiLoss: AntiLossSettings) {
+export async function resolveEffectivePlan(requestedPlan: PlanKey, customerEmail?: string) {
   const state = await readUsage();
+  const email = normalizeEmail(customerEmail);
+  const entitlement = email ? state.subscriptionEntitlements[email] : undefined;
+  const entitledPlan = entitlement && subscriptionIsActive(entitlement.status) ? entitlement.planKey : 'free';
+  const effectivePlan = planRank(requestedPlan) <= planRank(entitledPlan) ? requestedPlan : entitledPlan;
+
+  return {
+    email,
+    entitledPlan,
+    effectivePlan,
+    downgraded: effectivePlan !== requestedPlan,
+    entitlement: entitlement || null,
+  };
+}
+
+export async function reserveUsage(plan: PlanKey, estimatedCostUsd: number, antiLoss: AntiLossSettings, customerEmail?: string) {
+  const state = await readUsage();
+  const email = normalizeEmail(customerEmail);
   const nextCount = state.counts[plan] + 1;
   const nextGlobalCost = Number((state.globalSpentUsd + estimatedCostUsd).toFixed(4));
   const perPlanLimit = planDailyLimit(plan, antiLoss);
+  const emailTopUpBalance = email ? Number(state.topUpGenerationsByEmail[email] || 0) : 0;
   const softStopUsd = Number(((antiLoss.dailyGlobalAiBudgetUsd * antiLoss.softStopPercent) / 100).toFixed(4));
 
   if (state.globalSpentUsd >= softStopUsd) {
@@ -179,13 +224,13 @@ export async function reserveUsage(plan: PlanKey, estimatedCostUsd: number, anti
     };
   }
 
-  // Najpierw probujemy wykorzystac limit planu. Po limicie schodzimy z jednorazowych dokupien.
+  // Najpierw probujemy wykorzystac limit planu. Po limicie schodzimy z jednorazowych dokupien przypisanych do konkretnego emaila.
   const useTopUp = nextCount > perPlanLimit;
-  if (useTopUp && state.topUpGenerationsRemaining <= 0) {
+  if (useTopUp && (!email || emailTopUpBalance <= 0)) {
     return {
       allowed: false,
-      message: 'Przekroczono dzienny limit planu i brak dokupionych generacji jednorazowych.',
-      usage: state,
+      message: 'Przekroczono dzienny limit planu i brak aktywnych generacji jednorazowych przypisanych do tego emaila.',
+      usage: await usageSnapshot(email),
     };
   }
 
@@ -196,7 +241,13 @@ export async function reserveUsage(plan: PlanKey, estimatedCostUsd: number, anti
       ...state.counts,
       [plan]: useTopUp ? state.counts[plan] : nextCount,
     },
-    topUpGenerationsRemaining: useTopUp ? state.topUpGenerationsRemaining - 1 : state.topUpGenerationsRemaining,
+    topUpGenerationsRemaining: useTopUp ? Math.max(0, state.topUpGenerationsRemaining - 1) : state.topUpGenerationsRemaining,
+    topUpGenerationsByEmail: useTopUp && email
+      ? {
+          ...state.topUpGenerationsByEmail,
+          [email]: Math.max(0, emailTopUpBalance - 1),
+        }
+      : state.topUpGenerationsByEmail,
   };
 
   await writeUsage(nextState);
@@ -204,18 +255,27 @@ export async function reserveUsage(plan: PlanKey, estimatedCostUsd: number, anti
   return {
     allowed: true,
     consumedTopUp: useTopUp,
-    message: useTopUp ? 'Wykorzystano 1 generacje z pakietu jednorazowego.' : 'Wykorzystano limit planu dziennego.',
-    usage: nextState,
+    message: useTopUp ? 'Wykorzystano 1 generacje z pakietu jednorazowego przypisanego do tego emaila.' : 'Wykorzystano limit planu dziennego.',
+    usage: await usageSnapshot(email),
   };
 }
 
-export async function purchaseTopUp(packId: TopUpPackId) {
+export async function purchaseTopUp(packId: TopUpPackId, customerEmail?: string) {
   const pack = TOP_UP_PACKS[packId];
   if (!pack) {
     return {
       ok: false,
       message: 'Nieznany pakiet dokupienia.',
       usage: await readUsage(),
+    };
+  }
+
+  const email = normalizeEmail(customerEmail);
+  if (!email) {
+    return {
+      ok: false,
+      message: 'Email jest wymagany do przypisania pakietu jednorazowego.',
+      usage: await usageSnapshot(),
     };
   }
 
@@ -226,11 +286,16 @@ export async function purchaseTopUp(packId: TopUpPackId) {
     generations: pack.generations,
     amountUsd: pack.priceUsd,
     purchasedAt: new Date().toISOString(),
+    email,
   };
 
   const nextState: UsageState = {
     ...state,
     topUpGenerationsRemaining: state.topUpGenerationsRemaining + pack.generations,
+    topUpGenerationsByEmail: {
+      ...state.topUpGenerationsByEmail,
+      [email]: Number(state.topUpGenerationsByEmail[email] || 0) + pack.generations,
+    },
     topUpPurchases: [purchase, ...state.topUpPurchases].slice(0, 50),
   };
 
@@ -238,17 +303,26 @@ export async function purchaseTopUp(packId: TopUpPackId) {
 
   return {
     ok: true,
-    message: `Dodano ${pack.generations} generacji jednorazowych.`,
+    message: `Dodano ${pack.generations} generacji jednorazowych do ${email}.`,
     purchase,
-    usage: nextState,
+    usage: await usageSnapshot(email),
   };
 }
 
-export async function usageSnapshot() {
-  return readUsage();
+export async function usageSnapshot(customerEmail?: string) {
+  const state = await readUsage();
+  const email = normalizeEmail(customerEmail);
+  const entitlement = email ? state.subscriptionEntitlements[email] || null : null;
+  return {
+    ...state,
+    topUpGenerationsRemaining: email ? Number(state.topUpGenerationsByEmail[email] || 0) : state.topUpGenerationsRemaining,
+    totalTopUpGenerationsRemainingGlobal: state.topUpGenerationsRemaining,
+    entitlement,
+    effectivePlan: entitlement && subscriptionIsActive(entitlement.status) ? entitlement.planKey : 'free',
+  };
 }
 
-export async function fulfillTopUpCheckout(checkoutSessionId: string, packId: TopUpPackId, amountUsd?: number) {
+export async function fulfillTopUpCheckout(checkoutSessionId: string, packId: TopUpPackId, customerEmail: string, amountUsd?: number) {
   const pack = TOP_UP_PACKS[packId];
   if (!pack) {
     return {
@@ -259,12 +333,22 @@ export async function fulfillTopUpCheckout(checkoutSessionId: string, packId: To
     };
   }
 
+  const email = normalizeEmail(customerEmail);
+  if (!email) {
+    return {
+      ok: false,
+      message: 'Brak emaila do przypisania checkoutu top-up.',
+      usage: await usageSnapshot(),
+      alreadyFulfilled: false,
+    };
+  }
+
   const state = await readUsage();
   if (state.fulfilledStripeSessions.includes(checkoutSessionId)) {
     return {
       ok: true,
       message: 'Checkout byl juz wczesniej rozliczony.',
-      usage: state,
+      usage: await usageSnapshot(email),
       alreadyFulfilled: true,
     };
   }
@@ -275,11 +359,16 @@ export async function fulfillTopUpCheckout(checkoutSessionId: string, packId: To
     generations: pack.generations,
     amountUsd: Number.isFinite(Number(amountUsd)) ? Number(amountUsd) : pack.priceUsd,
     purchasedAt: new Date().toISOString(),
+    email,
   };
 
   const nextState: UsageState = {
     ...state,
     topUpGenerationsRemaining: state.topUpGenerationsRemaining + pack.generations,
+    topUpGenerationsByEmail: {
+      ...state.topUpGenerationsByEmail,
+      [email]: Number(state.topUpGenerationsByEmail[email] || 0) + pack.generations,
+    },
     topUpPurchases: [purchase, ...state.topUpPurchases].slice(0, 100),
     fulfilledStripeSessions: [checkoutSessionId, ...state.fulfilledStripeSessions].slice(0, 500),
   };
@@ -288,8 +377,8 @@ export async function fulfillTopUpCheckout(checkoutSessionId: string, packId: To
 
   return {
     ok: true,
-    message: `Rozliczono checkout i dodano ${pack.generations} generacji.`,
-    usage: nextState,
+    message: `Rozliczono checkout i dodano ${pack.generations} generacji do ${email}.`,
+    usage: await usageSnapshot(email),
     purchase,
     alreadyFulfilled: false,
   };

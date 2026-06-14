@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { budgetGuard } from '@/lib/budget';
 import { PlanKey } from '@/lib/settings';
 import { readSettings } from '@/lib/server/settingsStore';
-import { reserveUsage } from '@/lib/server/usageStore';
+import { reserveUsage, resolveEffectivePlan } from '@/lib/server/usageStore';
 import { enqueuePublishJob, getJobByIdempotencyKey, processPublishJob, PublishPlatform } from '@/lib/server/publishQueue';
 import { generateGrowthPackFromProvider } from '@/lib/server/aiProvider';
 import { buildOneClickHybridPlan } from '@/lib/server/hybridEngine';
@@ -20,7 +20,10 @@ export async function POST(req: Request) {
   const requestIdempotency = String(req.headers.get('idempotency-key') || body.idempotencyKey || '').trim();
   const idempotencyKey = requestIdempotency || `publish-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   const language = String(body.language || 'pl') as 'pl' | 'en' | 'es';
-  const plan = (body.plan || 'free') as PlanKey;
+  const requestedPlan = (body.plan || 'free') as PlanKey;
+  const customerEmail = String(body.customerEmail || '').trim().toLowerCase();
+  const access = await resolveEffectivePlan(requestedPlan, customerEmail);
+  const plan = access.effectivePlan;
   const topic = String(body.topic || '').trim();
   const niche = String(body.niche || 'creator economy').trim();
   const platforms = parsePlatforms(body.platforms);
@@ -43,7 +46,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: guard.message, guard }, { status: 402 });
   }
 
-  const usageReservation = await reserveUsage(plan, guard.estimatedCost, settings.antiLoss);
+  const usageReservation = await reserveUsage(plan, guard.estimatedCost, settings.antiLoss, customerEmail);
   if (!usageReservation.allowed) {
     return NextResponse.json({ error: usageReservation.message, guard, usage: usageReservation.usage }, { status: 402 });
   }
