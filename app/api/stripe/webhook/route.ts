@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import type { PlanKey } from '@/lib/settings';
+import { PLANS, TOP_UP_PACKS } from '@/lib/budget';
 import { fulfillTopUpCheckout, upsertSubscriptionEntitlement } from '@/lib/server/usageStore';
 import { getStripeClient } from '@/lib/server/stripe';
 
@@ -33,7 +34,39 @@ function readEmailFromSession(session: Stripe.Checkout.Session) {
   return (metadataEmail || customerEmail || '').trim().toLowerCase();
 }
 
+function expectedAmountValid(session: Stripe.Checkout.Session) {
+  const kind = session.metadata?.kind;
+  const expectedCurrency = String(session.metadata?.expectedCurrency || 'usd').toLowerCase();
+  if ((session.currency || '').toLowerCase() !== expectedCurrency) return false;
+
+  if (kind === 'topup') {
+    const packId = asTopUpPackId(session.metadata?.packId);
+    if (!packId) return false;
+    return session.amount_total === Math.round(TOP_UP_PACKS[packId].priceUsd * 100);
+  }
+
+  if (kind === 'subscription') {
+    const planKey = asPlanKey(session.metadata?.planKey);
+    if (!planKey) return false;
+    return session.amount_total === Math.round(PLANS[planKey].priceMonthly * 100);
+  }
+
+  return false;
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  if (process.env.NODE_ENV === 'production' && !session.livemode) {
+    return;
+  }
+
+  if (session.status !== 'complete') {
+    return;
+  }
+
+  if (!expectedAmountValid(session)) {
+    return;
+  }
+
   const kind = session.metadata?.kind;
 
   if (kind === 'topup' && session.mode === 'payment') {

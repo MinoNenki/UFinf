@@ -21,6 +21,14 @@ function resolveCancelUrl(origin: string) {
   return `${origin}/dashboard/account?payment=cancelled`;
 }
 
+function normalizeEmail(value: unknown) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -50,13 +58,18 @@ export async function POST(req: Request) {
       }
 
       const pack = TOP_UP_PACKS[packId];
-      const customerEmail = typeof body?.customerEmail === 'string' ? body.customerEmail.trim().toLowerCase() : '';
+      const customerEmail = normalizeEmail(body?.customerEmail);
+      if (customerEmail && !isValidEmail(customerEmail)) {
+        return NextResponse.json({ error: 'Podaj poprawny email przed przejsciem do platnosci.' }, { status: 400 });
+      }
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         customer_email: customerEmail || undefined,
         client_reference_id: customerEmail || undefined,
         billing_address_collection: 'auto',
+        payment_method_collection: 'always',
         allow_promotion_codes: true,
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
         success_url: resolveSuccessUrl(origin, 'topup', packId),
         cancel_url: resolveCancelUrl(origin),
         line_items: [
@@ -77,6 +90,8 @@ export async function POST(req: Request) {
           packId,
           generations: String(pack.generations),
           customerEmail,
+          expectedAmountUsd: String(pack.priceUsd),
+          expectedCurrency: 'usd',
         },
       });
 
@@ -98,17 +113,24 @@ export async function POST(req: Request) {
     }
 
     const plan = PLANS[planKey];
-    const customerEmail = typeof body?.customerEmail === 'string' ? body.customerEmail.trim().toLowerCase() : '';
+      const customerEmail = normalizeEmail(body?.customerEmail);
+      if (customerEmail && !isValidEmail(customerEmail)) {
+      return NextResponse.json({ error: 'Podaj poprawny email przed przejsciem do platnosci.' }, { status: 400 });
+    }
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer_email: customerEmail || undefined,
       client_reference_id: customerEmail || undefined,
       billing_address_collection: 'auto',
+      payment_method_collection: 'always',
       allow_promotion_codes: true,
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       subscription_data: {
         metadata: {
           planKey,
           customerEmail,
+          expectedAmountUsd: String(plan.priceMonthly),
+          expectedCurrency: 'usd',
         },
       },
       success_url: resolveSuccessUrl(origin, 'subscription', planKey),
@@ -134,6 +156,8 @@ export async function POST(req: Request) {
         planKey,
         dailyGenerations: String(plan.dailyGenerations),
         customerEmail,
+        expectedAmountUsd: String(plan.priceMonthly),
+        expectedCurrency: 'usd',
       },
     });
 
