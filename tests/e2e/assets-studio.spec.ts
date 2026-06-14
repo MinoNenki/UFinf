@@ -71,7 +71,7 @@ test('assets studio generates and offers export controls', async ({ page }) => {
   await page.locator('[data-testid="as-type-ad"]').click();
   await page.locator('[data-testid="as-generate"]').click();
 
-  await expect(page.locator('[data-testid="as-preview-title"]')).toContainText(/Limited offer|Oferta limitada|Oferta limitowana/i);
+  await expect(page.locator('[data-testid="as-preview-title"]')).toContainText(/Limited offer|Oferta limitada|Oferta limitowana|Offer expires|La oferta expira|Oferta wygasa/i);
   await expect(page.locator('[data-testid="as-export-png"]')).toBeVisible();
   await expect(page.locator('[data-testid="as-export-jpg"]')).toBeVisible();
   await expect(page.locator('[data-testid="as-export-pdf"]')).toBeVisible();

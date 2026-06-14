@@ -24,7 +24,7 @@ test('landing DOM smoke: sections, pricing plans, topups, and key navigation', a
   await expect(planSelect.locator('option[value="expert"]')).toHaveCount(1);
 
   // Pricing cards include all subscription plans.
-  await expect(page.getByRole('heading', { name: 'Free' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Free', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Pro' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Premium Plus' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Expert' })).toBeVisible();
