@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server';
 import { readSettings } from '@/lib/server/settingsStore';
 import { generateStudioImageAsset, generateStudioVideoBlueprint } from '@/lib/server/mediaProvider';
 import { saveStudioHistoryEntry } from '@/lib/server/studioHistoryStore';
+import { requireEntitlement } from '@/lib/server/security/requireEntitlement';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+  const guard = await requireEntitlement(req, ['pro', 'premium_plus', 'expert']);
+  if (guard) return guard;
   const body = await req.json().catch(() => ({}));
   const topic = String(body.topic || '').trim();
   const preset = String(body.preset || '').trim();

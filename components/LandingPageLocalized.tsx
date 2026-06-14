@@ -250,7 +250,7 @@ export default function LandingPageLocalized({ variant }: { variant: 'a' | 'b' }
 
       <MobileDownloadStrip />
 
-      <footer style={{ textAlign: 'center', color: 'var(--muted)', padding: '32px 5vw', borderTop: '1px solid var(--stroke)' }}><p>{copy.footer.text}</p><p style={{ marginTop: 8, fontSize: 12 }}><a href="/dashboard" style={{ color: 'var(--cyan)' }}>Dashboard</a> · <a href="#pricing" style={{ color: 'var(--muted)', marginLeft: 12 }}>{copy.footer.pricing}</a> · <a href="#factory" style={{ color: 'var(--muted)', marginLeft: 12 }}>{copy.footer.features}</a></p></footer>
+      <footer style={{ textAlign: 'center', color: 'var(--muted)', padding: '32px 5vw', borderTop: '1px solid var(--stroke)' }}><p>{copy.footer.text}</p><p style={{ marginTop: 8, fontSize: 12 }}><a href="/dashboard" style={{ color: 'var(--cyan)' }}>Dashboard</a> · <a href="#pricing" style={{ color: 'var(--muted)', marginLeft: 12 }}>{copy.footer.pricing}</a> · <a href="#factory" style={{ color: 'var(--muted)', marginLeft: 12 }}>{copy.footer.features}</a> · <a href="/terms" style={{ color: 'var(--muted)', marginLeft: 12 }}>{language === 'pl' ? 'Regulamin' : language === 'es' ? 'Términos' : 'Terms'}</a> · <a href="/privacy" style={{ color: 'var(--muted)', marginLeft: 12 }}>{language === 'pl' ? 'Prywatność' : language === 'es' ? 'Privacidad' : 'Privacy'}</a></p></footer>
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
 import type { StudioVideoBlueprint } from '@/lib/server/mediaProvider';
+import { requireEntitlement } from '@/lib/server/security/requireEntitlement';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,8 @@ function drawPageHeader(page: PDFPage, title: string, subtitle: string, fontBold
 }
 
 export async function POST(req: Request) {
+  const guard = await requireEntitlement(req, ['pro', 'premium_plus', 'expert']);
+  if (guard) return guard;
   const body = await req.json().catch(() => ({} as ExportBody));
   const blueprint = body.blueprint;
 
