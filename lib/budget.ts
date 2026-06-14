@@ -20,18 +20,18 @@ export const TOP_UP_PACKS: Record<TopUpPackId, {
   boost_75: {
     id: 'boost_75',
     label: 'Creator Boost',
-    priceUsd: 19,
+    priceUsd: 24,
     generations: 75,
     bonusLabel: 'Najczesciej wybierany',
-    description: 'Bestseller • $0.25 za generację • 75 generacji w tydzień • Oszczędzasz $6 vs Starter',
+    description: 'Bestseller • $0.32 za generację • 75 generacji na sprint kampanii • Taniej niż 3x Starter',
   },
   boost_200: {
     id: 'boost_200',
     label: 'Scale Boost',
-    priceUsd: 39,
-    generations: 150,
+    priceUsd: 49,
+    generations: 200,
     bonusLabel: 'Najlepsza cena / generacje',
-    description: 'Dla profesjonalistów • $0.26 za generację • 150 generacji/miesiąc • Oszczędzasz $15 vs Starter',
+    description: 'Dla profesjonalistów • $0.245 za generację • 200 generacji na skalowanie • Najmocniejszy jednorazowy pakiet',
   },
 };
 
@@ -53,27 +53,27 @@ export const PLANS: Record<PlanKey, {
   },
   pro: {
     name: 'Pro',
-    priceMonthly: 24,
-    dailyGenerations: Number(process.env.PRO_DAILY_GENERATIONS || 60),
+    priceMonthly: 19,
+    dailyGenerations: Number(process.env.PRO_DAILY_GENERATIONS || 70),
     maxRequestCostUsd: 0.08,
     features: ['Content Factory', 'Trend Radar', 'AI Konkurencja', 'Smart Inbox', 'dokupienia jednorazowe'],
-    fullDescription: 'Dla rosnących twórców • 60 generacji dziennie • AI Trend Radar (daily insights) • Smart Inbox • oszczędź czas na publikacji'
+    fullDescription: 'Najlepszy próg wejścia • 70 generacji dziennie • Trend Radar • Smart Inbox • szybki zwrot dla solo twórcy'
   },
   premium_plus: {
     name: 'Premium Plus',
-    priceMonthly: 69,
-    dailyGenerations: Number(process.env.PREMIUM_PLUS_DAILY_GENERATIONS || 180),
+    priceMonthly: 49,
+    dailyGenerations: Number(process.env.PREMIUM_PLUS_DAILY_GENERATIONS || 220),
     maxRequestCostUsd: Number(process.env.MAX_REQUEST_COST_USD || 0.12),
     features: ['One Click Publish', 'AI Content Brain', 'Revenue AI', 'wieksze limity', 'najtansze dokupienia'],
-    fullDescription: 'Pro-level ecosystem • 180 generacji dziennie • One Click Publish (auto TikTok→YouTube→Instagram) • AI Content Brain (intelligentna analiza trendu) • Revenue AI (monetyzacja) • Priority support'
+    fullDescription: 'Bestseller z najlepszym stosunkiem ceny do wzrostu • 220 generacji dziennie • publish + brain + revenue w jednym pakiecie'
   },
   expert: {
     name: 'Expert',
-    priceMonthly: 119,
-    dailyGenerations: Number(process.env.EXPERT_DAILY_GENERATIONS || 360),
+    priceMonthly: 99,
+    dailyGenerations: Number(process.env.EXPERT_DAILY_GENERATIONS || 500),
     maxRequestCostUsd: Number(process.env.MAX_REQUEST_COST_USD || 0.12),
     features: ['Everything in Premium Plus', 'priority queue', 'workspace growth support', 'highest limits'],
-    fullDescription: 'Best for teams and power creators • 360 generacji dziennie • priorytetowe przetwarzanie • pełny stack automatyzacji i publikacji'
+    fullDescription: 'Dla zespołów i intensywnej skali • 500 generacji dziennie • priorytet • najwyższe limity i najszybsza egzekucja'
   }
 };
 

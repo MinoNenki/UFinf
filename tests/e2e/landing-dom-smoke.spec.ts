@@ -28,12 +28,15 @@ test('landing DOM smoke: sections, pricing plans, topups, and key navigation', a
   await expect(page.getByRole('heading', { name: 'Pro' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Premium Plus' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Expert' })).toBeVisible();
-  await expect(page.getByText('$119')).toBeVisible();
+  await expect(page.getByText('$19/mo')).toBeVisible();
+  await expect(page.getByText('$49/mo')).toBeVisible();
+  await expect(page.getByText('$99/mo')).toBeVisible();
 
   // Top-up offers are present.
   await expect(page.getByRole('heading', { name: 'Starter Boost' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Creator Boost' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Scale Boost' })).toBeVisible();
+  await expect(page.getByText('200 generacji', { exact: true })).toBeVisible();
 
   // Route-level smoke for dedicated pricing page.
   await page.goto('/pricing');

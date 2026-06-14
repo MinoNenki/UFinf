@@ -68,11 +68,11 @@ export function defaultSettings(): AppSettings {
   return {
     antiLoss: {
       maxRequestCostUsd: num(process.env.MAX_REQUEST_COST_USD, 0.12),
-      dailyGlobalAiBudgetUsd: num(process.env.DAILY_GLOBAL_AI_BUDGET_USD, 20),
+      dailyGlobalAiBudgetUsd: num(process.env.DAILY_GLOBAL_AI_BUDGET_USD, 25),
       freeDailyGenerations: num(process.env.FREE_DAILY_GENERATIONS, 5),
-      proDailyGenerations: num(process.env.PRO_DAILY_GENERATIONS, 60),
-      premiumPlusDailyGenerations: num(process.env.PREMIUM_PLUS_DAILY_GENERATIONS, 180),
-      softStopPercent: num(process.env.SOFT_STOP_PERCENT, 80),
+      proDailyGenerations: num(process.env.PRO_DAILY_GENERATIONS, 70),
+      premiumPlusDailyGenerations: num(process.env.PREMIUM_PLUS_DAILY_GENERATIONS, 220),
+      softStopPercent: num(process.env.SOFT_STOP_PERCENT, 72),
     },
     apiKeys: {
       openaiApiKey: envValue('OPENAI_API_KEY'),

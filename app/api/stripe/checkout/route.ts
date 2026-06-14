@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { TOP_UP_PACKS, type TopUpPackId, PLANS } from '@/lib/budget';
 import type { PlanKey } from '@/lib/settings';
 import { getStripeClient, resolvePublicOrigin } from '@/lib/server/stripe';
+import { consumeRateLimit } from '@/lib/server/security/rateLimit';
+import { getClientIp } from '@/lib/server/security/requestMeta';
 
 function isTopUpPackId(value: unknown): value is TopUpPackId {
   return value === 'boost_25' || value === 'boost_75' || value === 'boost_200';
@@ -25,6 +27,17 @@ export async function POST(req: Request) {
     const kind = body?.kind === 'topup' ? 'topup' : 'subscription';
     const origin = resolvePublicOrigin(req);
     const stripe = getStripeClient();
+    const ip = getClientIp(req);
+    const rl = await consumeRateLimit({
+      bucket: 'stripe-checkout',
+      key: `${ip}:${kind}`,
+      maxRequests: 10,
+      windowSeconds: 10 * 60,
+    });
+
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Za duzo prob checkoutu. Odczekaj chwile i sprobuj ponownie.' }, { status: 429 });
+    }
 
     if (kind === 'topup') {
       const packId = body?.packId;
@@ -52,7 +65,7 @@ export async function POST(req: Request) {
               currency: 'usd',
               product_data: {
                 name: `USInf ${pack.label}`,
-                description: `${pack.generations} generations one-time top-up - cheaper than monthly Premium Plus over time`,
+                description: `${pack.generations} one-time generations for launch spikes, campaigns, and overflow without changing your plan`,
               },
               unit_amount: Math.round(pack.priceUsd * 100),
             },
@@ -106,7 +119,7 @@ export async function POST(req: Request) {
             currency: 'usd',
             product_data: {
               name: `USInf ${plan.name}`,
-              description: `${plan.dailyGenerations} generations per day - Premium Plus is the best value for recurring usage`,
+              description: `${plan.dailyGenerations} generations per day with AI Growth OS, assets, scheduling, and growth automation`,
             },
             recurring: {
               interval: 'month',

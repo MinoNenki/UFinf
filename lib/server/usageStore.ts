@@ -161,6 +161,15 @@ export async function reserveUsage(plan: PlanKey, estimatedCostUsd: number, anti
   const nextCount = state.counts[plan] + 1;
   const nextGlobalCost = Number((state.globalSpentUsd + estimatedCostUsd).toFixed(4));
   const perPlanLimit = planDailyLimit(plan, antiLoss);
+  const softStopUsd = Number(((antiLoss.dailyGlobalAiBudgetUsd * antiLoss.softStopPercent) / 100).toFixed(4));
+
+  if (state.globalSpentUsd >= softStopUsd) {
+    return {
+      allowed: false,
+      message: 'Aktywowano soft stop budzetowy. Zatrzymano nowe generacje przed przepaleniem dziennego limitu AI.',
+      usage: state,
+    };
+  }
 
   if (nextGlobalCost > antiLoss.dailyGlobalAiBudgetUsd) {
     return {

@@ -7,10 +7,27 @@ import { reserveUsage } from '@/lib/server/usageStore';
 import { buildOneClickHybridPlan } from '@/lib/server/hybridEngine';
 import { ingestBrainEvents } from '@/lib/server/contentBrainStore';
 import { resolveCampaignStrategy } from '@/lib/server/campaignStrategy';
+import { consumeRateLimit } from '@/lib/server/security/rateLimit';
+import { getClientIp } from '@/lib/server/security/requestMeta';
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const plan = (body.plan || 'free') as PlanKey;
+  const ip = getClientIp(req);
+  const rl = await consumeRateLimit({
+    bucket: 'generate',
+    key: `${ip}:${plan}`,
+    maxRequests: plan === 'free' ? 12 : plan === 'pro' ? 40 : 80,
+    windowSeconds: 10 * 60,
+  });
+
+  if (!rl.allowed) {
+    return NextResponse.json({
+      error: 'Za duzo prob generowania w krotkim czasie. Sprobuj ponownie za chwile.',
+      retryAfterSeconds: rl.retryAfterSeconds,
+    }, { status: 429 });
+  }
+
   const topic = String(body.topic || '');
   const attachmentContext = String(body.attachmentContext || '');
   const generationTopic = [topic.trim(), attachmentContext.trim()].filter(Boolean).join('\n\n');

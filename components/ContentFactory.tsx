@@ -502,7 +502,7 @@ export default function ContentFactory() {
             </div>
           </div>
 
-          <div className="form-group"><label className="form-label">{copy.plan}</label><select value={plan} onChange={(e) => setPlan(e.target.value)}><option value="free">Free (3/dzien)</option><option value="pro">Pro (40/dzien)</option><option value="premium_plus">Premium Plus (120/dzien)</option><option value="expert">Expert (360/dzien)</option></select></div>
+          <div className="form-group"><label className="form-label">{copy.plan}</label><select value={plan} onChange={(e) => setPlan(e.target.value)}><option value="free">Free (5/dzien)</option><option value="pro">Pro (70/dzien)</option><option value="premium_plus">Premium Plus (220/dzien)</option><option value="expert">Expert (500/dzien)</option></select></div>
 
           <div className="form-group">
             <label className="form-label">{copy.campaignLength}</label>
